@@ -49,6 +49,7 @@ def run_reasoning_pipeline(initial_context, initial_objective):
         result = reasoning_pipeline(context=context, objective=objective)
         
         # Validate and process the action
+        action = result.action.lower().strip()
         print("action:", action)
         if "terminate" in action or "no further" in action:
             print("\nFinal Reasoning Output:", result.reasoning_output)

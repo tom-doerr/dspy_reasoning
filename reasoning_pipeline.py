@@ -121,15 +121,23 @@ def generate_requirements(context, objective):
         # Process new requirements
         if result.new_requirements:
             if isinstance(result.new_requirements, str):
-                # Split string into list items
-                new_reqs = [req.strip() for req in result.new_requirements.split('\n') if req.strip()]
+                # Split string into list items and filter out non-requirement statements
+                new_reqs = [
+                    req.strip() for req in result.new_requirements.split('\n') 
+                    if req.strip() and not req.lower().startswith(('none', 'no new'))
+                ]
             else:
-                new_reqs = result.new_requirements
+                # Filter list items for non-requirement statements
+                new_reqs = [
+                    req for req in result.new_requirements 
+                    if not str(req).lower().startswith(('none', 'no new'))
+                ]
                 
-            print("\nAdding new requirements:")
-            for req in new_reqs:
-                print(f"- {req}")
-                requirements.append(req)
+            if new_reqs:  # Only add if we have actual requirements
+                print("\nAdding new requirements:")
+                for req in new_reqs:
+                    print(f"- {req}")
+                    requirements.append(req)
         
         # Process unnecessary requirements
         if result.unnecessary_requirements:

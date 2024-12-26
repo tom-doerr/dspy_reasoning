@@ -33,10 +33,20 @@ def benchmark_jeopardy():
     }
     
     start_time = time.time()
-    for item in dataset:
+    for i, item in enumerate(dataset, 1):
         if assess_jeopardy_quality(item["question"], item["answer"]):
             quality_metrics["correct_answers"] += 1
+        
+        # Calculate current stats
+        current_success = quality_metrics["correct_answers"]
+        total = quality_metrics["total_questions"]
+        percentage = (current_success / total) * 100
+        
+        # Print progress
+        print(f"\rProgress: {i}/{total} | Success: {current_success} | Rate: {percentage:.1f}%", end="", flush=True)
+    
     elapsed_time = time.time() - start_time
+    print()  # New line after progress
     
     quality_metrics["time_seconds"] = elapsed_time
     quality_metrics["accuracy"] = quality_metrics["correct_answers"] / quality_metrics["total_questions"]

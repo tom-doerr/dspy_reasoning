@@ -12,18 +12,24 @@ class MathDatasetGenerator:
     def _generate_number(self, min_val=1, max_val=100):
         return random.randint(min_val, max_val)
         
-    def _generate_expression(self, depth=1):
-        if depth > 2 or random.random() < 0.5:
-            return str(self._generate_number())
-            
-        left = self._generate_expression(depth + 1)
-        right = self._generate_expression(depth + 1)
-        op = random.choice(self.operators)
+    def _generate_expression(self, min_ops=1, max_ops=5):
+        # Generate number of operations (1 to 5)
+        num_ops = random.randint(min_ops, max_ops)
         
-        # Add parentheses with some probability
-        if random.random() < self.parentheses_prob:
-            return f"({left} {op} {right})"
-        return f"{left} {op} {right}"
+        # Start with a single number
+        expression = str(self._generate_number())
+        
+        for _ in range(num_ops):
+            op = random.choice(self.operators)
+            next_num = str(self._generate_number())
+            
+            # Decide whether to add parentheses
+            if random.random() < self.parentheses_prob:
+                expression = f"({expression} {op} {next_num})"
+            else:
+                expression = f"{expression} {op} {next_num}"
+                
+        return expression
 
     def generate_dataset(self, num_tasks=100):
         dataset = []

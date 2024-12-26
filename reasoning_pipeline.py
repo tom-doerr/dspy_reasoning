@@ -73,11 +73,12 @@ class ActionReasoning(dspy.Module):
 reasoning_pipeline = ActionReasoning()
 
 def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
-    # Use the full context initially
-    context = initial_context.strip()
+    # Initialize context history
+    context_history = [initial_context.strip()]
+    
     # Extract question and hint if they exist
-    context_lines = context.split('\n')
-    question = next((line for line in context_lines if line.startswith("Final Question:")), context)
+    context_lines = initial_context.split('\n')
+    question = next((line for line in context_lines if line.startswith("Final Question:")), initial_context)
     hint = next((line for line in context_lines if line.startswith("Hint:")), "")
     
     # Create display context for debugging
@@ -121,8 +122,23 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
             
         print("Decision: Continue reasoning")
         
-        # Update context and objective for next iteration
-        context = result.reasoning_output
+        # Update context history with full reasoning details
+        context_history.append(f"""
+--- Reasoning Iteration {iteration} ---
+Context: {display_context}
+Objective: {objective}
+Reasoning Process: {result.reasoning}
+Reasoning Output: {result.reasoning_output}
+Fallacy Analysis:
+- Affirming Consequent: {result.affirming_consequent_analysis} (Confidence: {result.affirming_consequent_confidence}/10)
+- Denying Antecedent: {result.denying_antecedent_analysis} (Confidence: {result.denying_antecedent_confidence}/10)
+- Undistributed Middle: {result.undistributed_middle_analysis} (Confidence: {result.undistributed_middle_confidence}/10)
+- Illicit Major: {result.illicit_major_analysis} (Confidence: {result.illicit_major_confidence}/10)
+- Illicit Minor: {result.illicit_minor_analysis} (Confidence: {result.illicit_minor_confidence}/10)
+""".strip())
+        
+        # Update context for next iteration with full history
+        context = "\n\n".join(context_history)
         objective = "Continue reasoning based on previous analysis"
         iteration += 1
 

@@ -16,6 +16,14 @@ class MathCalculator(dspy.Module):
         super().__init__()
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
 
+    def forward(self, task):
+        """Forward pass for the math calculator"""
+        result = self.calculate(task=task)
+        return dspy.Prediction(
+            reasoning=result.reasoning,
+            solution=result.solution
+        )
+
     def evaluate_on_dataset(self, dataset_path="math_dataset.json"):
         start_time = time.time()
         

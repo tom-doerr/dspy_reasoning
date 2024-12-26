@@ -29,7 +29,7 @@ class ActionReasoning(dspy.Module):
 # Step 4: Create an Instance of the Pipeline
 reasoning_pipeline = ActionReasoning()
 
-def run_reasoning_pipeline(initial_context, initial_objective):
+def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
     # Extract just the question and hint from the initial context
     context_lines = initial_context.strip().split('\n')
     question = next(line for line in context_lines if line.startswith("Final Question:"))
@@ -47,6 +47,10 @@ def run_reasoning_pipeline(initial_context, initial_objective):
         
         # Run the reasoning pipeline
         result = reasoning_pipeline(context=context, objective=objective)
+        
+        # Call callback if provided
+        if callback:
+            callback(iteration, context, objective, result)
         
         # Validate and process the action
         action = result.action.lower().strip()

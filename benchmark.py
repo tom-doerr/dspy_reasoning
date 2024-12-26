@@ -8,20 +8,46 @@ from reasoning_pipeline import run_reasoning_pipeline
 def assess_jeopardy_quality(question, answer, initial_question, hint):
     # Use the reasoning pipeline to assess the question
     context = f"""
-    Initial Question: {initial_question}
-    Hint: {hint}
     Final Question: {question}
+    Hint: {hint}
     Answer: {answer}
     """
-    objective = "Assess whether the final question is correct and requires reasoning to reach the answer"
+    objective = """
+    1. Verify if the question correctly leads to the answer
+    2. Determine if the question requires reasoning beyond the hint
+    3. Assess if the hint provides meaningful guidance without giving away the answer
+    """
     
-    # Run the reasoning pipeline
-    run_reasoning_pipeline(context, objective)
+    # Run the reasoning pipeline and capture its output
+    reasoning_output = []
+    def capture_reasoning(iteration, context, objective, result):
+        reasoning_output.append({
+            "iteration": iteration,
+            "context": context,
+            "objective": objective,
+            "result": result
+        })
     
-    # Return assessment results
+    run_reasoning_pipeline(context, objective, callback=capture_reasoning)
+    
+    # Analyze the reasoning output
+    correct = False
+    requires_reasoning = False
+    iterations = len(reasoning_output)
+    
+    # Check final reasoning output for assessment
+    if reasoning_output:
+        final_result = reasoning_output[-1]["result"]
+        if "correct" in final_result.reasoning_output.lower():
+            correct = True
+        if "requires reasoning" in final_result.reasoning_output.lower():
+            requires_reasoning = True
+    
     return {
-        "correct": True,  # Will be determined by reasoning pipeline
-        "requires_reasoning": True  # Will be determined by reasoning pipeline
+        "correct": correct,
+        "requires_reasoning": requires_reasoning,
+        "iterations": iterations,
+        "reasoning_output": reasoning_output
     }
 
 def benchmark_jeopardy():

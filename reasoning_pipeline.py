@@ -13,10 +13,15 @@ class ReasoningSignature(dspy.Signature):
     objective = dspy.InputField(desc="The objective to achieve")
     reasoning = dspy.OutputField(desc="The reasoning process including step-by-step calculations")
     reasoning_output = dspy.OutputField(desc="The final output of the reasoning process")
-    # is_valid_reasoning = dspy.OutputField(
-        # desc="True only if the reasoning includes correct mathematical calculations that reach the target value"
-    # )
-    # reasoning fallacies
+    
+    # Fallacy detection outputs
+    fallacy_analysis = dspy.OutputField(
+        desc="Analysis of potential logical fallacies in the reasoning process"
+    )
+    fallacy_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether a logical fallacy was committed"
+    )
+    
     action = dspy.OutputField(
         desc="The action to take, must be either 'reasoning' or 'terminate'"
     )
@@ -64,7 +69,9 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         action = result.action.lower().strip()
         print("Reasoning Process:", result.reasoning)
         print("Reasoning Output:", result.reasoning_output)
-        # print("Is Valid Reasoning:", result.is_valid_reasoning)
+        print("\nFallacy Analysis:")
+        print(result.fallacy_analysis)
+        print(f"Fallacy Confidence: {result.fallacy_confidence}/10")
         print("action:", action)
         
         # Only accept termination if the reasoning is mathematically valid

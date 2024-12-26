@@ -54,6 +54,22 @@ class ReasoningSignature(dspy.Signature):
         desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
     )
     
+    undistributed_middle_analysis = dspy.OutputField(
+        desc="Analysis of whether the fallacy of the undistributed middle was committed"
+    )
+    
+    undistributed_middle_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
+    )
+    
+    illicit_major_analysis = dspy.OutputField(
+        desc="Analysis of whether the fallacy of illicit major was committed"
+    )
+    
+    illicit_major_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
+    )
+    
     is_valid_reasoning = dspy.OutputField(
         desc="True if the reasoning is mathematically valid and reaches the correct conclusion"
     )

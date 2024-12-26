@@ -54,6 +54,14 @@ class ReasoningSignature(dspy.Signature):
         desc="True if the reasoning is mathematically valid and reaches the correct conclusion"
     )
     
+    objective_achieved_analysis = dspy.OutputField(
+        desc="Analysis of whether the objective was fully achieved"
+    )
+    
+    objective_achieved_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 where 1 means extremely sure objective was not achieved and 10 means objective was definitely achieved"
+    )
+    
     action = dspy.OutputField(
         desc="The action to take, must be either 'reasoning' or 'terminate'"
     )
@@ -105,6 +113,9 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         action = result.action.lower().strip()
         print("Reasoning Process:", result.reasoning)
         print("Reasoning Output:", result.reasoning_output)
+        print("\nObjective Achievement Analysis:")
+        print(f"{result.objective_achieved_analysis} (Confidence: {result.objective_achieved_confidence}/10)")
+        
         print("\nFormal Logical Fallacy Analysis:")
         print(f"Affirming Consequent: {result.affirming_consequent_analysis} (Confidence: {result.affirming_consequent_confidence}/10)")
         print(f"Denying Antecedent: {result.denying_antecedent_analysis} (Confidence: {result.denying_antecedent_confidence}/10)")

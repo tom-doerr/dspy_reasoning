@@ -56,9 +56,9 @@ def benchmark_reasoning_pipeline():
         
         # Print progress
         print(f"\nCurrent Progress: {i}/{pipeline_metrics['total_questions']}")
-        print(f"Iterations: {result['iterations']}")
-        print(f"Reasoning Quality: {result['reasoning_quality']:.1%}")
-        print(f"Decision Accuracy: {result['decision_accuracy']:.1%}")
+        print(f"Iterations: {len(reasoning_output)}")
+        current_accuracy = pipeline_metrics["correct_answers"] / i
+        print(f"Current Accuracy: {current_accuracy:.1%}")
     
     elapsed_time = time.time() - start_time
     print()  # New line after progress

@@ -204,7 +204,17 @@ def generate_requirements(context, objective):
 
 def track_analysis(analysis_history, analysis, confidence):
     """Track analysis results as a list of tuples"""
-    analysis_history.append((analysis, int(confidence)))
+    try:
+        # Extract first digit if confidence is a string
+        if isinstance(confidence, str):
+            confidence = ''.join(filter(str.isdigit, confidence)) or '5'
+        confidence_int = int(confidence)
+        # Clamp to 1-10 range
+        confidence_int = max(1, min(10, confidence_int))
+        analysis_history.append((analysis, confidence_int))
+    except (ValueError, TypeError):
+        # Default to medium confidence if parsing fails
+        analysis_history.append((analysis, 5))
     return analysis_history
 
 def run_reasoning_pipeline(initial_context, initial_objective, callback=None):

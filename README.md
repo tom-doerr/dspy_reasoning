@@ -1,10 +1,10 @@
 <h1 align="center">Reasoning Pipeline Experiments</h1>
 
 <p align="center">
-  <strong>A simple exploration of AI reasoning through math problems</strong>
+  <strong>Exploring AI reasoning capabilities using DSPy</strong>
 </p>
 
-<p align="center">
+<p align="center>
   <a href="https://github.com/tom-doerr/dspy_reasoning/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
   </a>
@@ -20,8 +20,8 @@
 </p>
 
 <p align="center">
-  This is a simple experiment to explore how AI models can solve math problems through iterative reasoning.
-  It's a work in progress and not meant to be production-ready.
+  This project explores how DSPy can be used to implement and analyze AI reasoning processes.
+  It's a work in progress for experimenting with different reasoning approaches and patterns.
 </p>
 
 <div align="center">
@@ -34,19 +34,19 @@
 
 ## What it does
 
-- Generates simple math problems
-- Attempts to solve them through iterative reasoning
-- Checks for basic logical errors
-- Tracks some basic metrics
+- Implements iterative reasoning processes
+- Analyzes reasoning patterns and logical validity
+- Tracks reasoning performance metrics
+- Provides detailed reasoning analysis
 
 ## Current Limitations
 
 This is an experimental project with several known limitations:
 
-- Only handles basic math problems
 - Reasoning quality depends heavily on the underlying model
-- Error checking is simplistic
-- Performance metrics are basic
+- Analysis capabilities are still basic
+- Performance metrics are simple
+- Needs more diverse test cases
 
 ## System Components
 

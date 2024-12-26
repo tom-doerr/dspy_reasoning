@@ -191,7 +191,9 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
     print(f"\nFinal Requirements: {requirements}")
     
     # Initialize context and analysis history
-    context_history = [initial_context.strip()]
+    requirements_str = "\n".join(f"- {req}" for req in requirements)
+    initial_context_with_reqs = f"{initial_context.strip()}\n\nRequirements:\n{requirements_str}"
+    context_history = [initial_context_with_reqs]
     analysis_history = []
     
     # Extract question and hint if they exist
@@ -200,7 +202,7 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
     hint = next((line for line in context_lines if line.startswith("Hint:")), "")
     
     # Create display context for debugging
-    display_context = f"{question}\n{hint}" if hint else question
+    display_context = f"{question}\n{hint}\n\nRequirements:\n{requirements_str}" if hint else f"{question}\n\nRequirements:\n{requirements_str}"
     objective = initial_objective
     iteration = 1
     

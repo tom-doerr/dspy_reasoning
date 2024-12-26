@@ -15,6 +15,8 @@ class MathCalculator(dspy.Module):
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
 
     def evaluate_on_dataset(self, dataset_path="math_dataset.json"):
+        start_time = time.time()
+        
         with open(dataset_path) as f:
             dataset = json.load(f)
         

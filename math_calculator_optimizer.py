@@ -41,7 +41,6 @@ class MathOptimizer:
             prompt_model=self.lm,
             task_model=self.lm,
             num_threads=10,
-            requires_permission_to_run=False,
             auto='heavy',
         )
 

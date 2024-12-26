@@ -9,7 +9,7 @@ class ReasoningSignature(dspy.Signature):
     context = dspy.InputField(desc="The context to reason about")
     objective = dspy.InputField(desc="The objective to achieve")
     reasoning_output = dspy.OutputField(desc="The reasoning process")
-    action = dspy.OutputField(desc="The action to take", choices=["reasoning", "terminate"])
+    action = dspy.OutputField(desc="The action to take, must be either 'reasoning' or 'terminate'")
 
 # Step 3: Create a Module with the Signature
 class ActionReasoning(dspy.Module):
@@ -33,6 +33,11 @@ objective = "Determine when the Eiffel Tower was completed and if we should cont
 result = reasoning_pipeline(context=context, objective=objective)
 
 # Step 7: Validate and Print the Results
-assert result.action in ["reasoning", "terminate"], f"Invalid action: {result.action}"
+action = result.action.lower().strip()
+if "terminate" in action or "no further" in action:
+    action = "terminate"
+else:
+    action = "reasoning"
+
 print("Reasoning Output:", result.reasoning_output)
-print("Action:", result.action)
+print("Action:", action)

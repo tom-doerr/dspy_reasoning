@@ -34,19 +34,19 @@ class JeopardyDatasetGenerator(dspy.Module):
                 # Nested progress bar for current category
                 with tqdm(range(num_questions_per_category), desc=f"Generating {category}", leave=False) as pbar_category:
                     for _ in pbar_category:
-                # First generate a challenging answer
-                answer_result = self.generate_answer(category=category)
-                
-                # Then generate a question that leads to that answer
-                question_result = self.generate_question(
-                    category=category,
-                    answer=answer_result.answer
-                )
-                
-                dataset.append({
-                    "category": category,
-                    "question": question_result.question,
-                    "answer": answer_result.answer
+                        # First generate a challenging answer
+                        answer_result = self.generate_answer(category=category)
+                        
+                        # Then generate a question that leads to that answer
+                        question_result = self.generate_question(
+                            category=category,
+                            answer=answer_result.answer
+                        )
+                        
+                        dataset.append({
+                            "category": category,
+                            "question": question_result.question,
+                            "answer": answer_result.answer
                         })
                         # Update both progress bars
                         pbar_category.update(1)

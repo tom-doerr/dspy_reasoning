@@ -50,7 +50,6 @@ class JeopardyDatasetGenerator(dspy.Module):
                     for _ in pbar_category:
                         # First generate a challenging answer
                         answer_result = self.generate_answer(category=category)
-                        print("answer_result:", answer_result)
                         
                         # First generate an initial direct question
                         initial_question_result = self.generate_initial_question(
@@ -71,7 +70,6 @@ class JeopardyDatasetGenerator(dspy.Module):
                             answer=answer_result.answer,
                             hint=hint_result.hint
                         )
-                        print("question_result:", question_result)
                         
                         dataset.append({
                             "category": category,

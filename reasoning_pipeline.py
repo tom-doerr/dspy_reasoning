@@ -107,7 +107,9 @@ def generate_requirements(context, objective):
     
     while True:
         print(f"\n--- Requirements Iteration {iteration} ---")
-        print(f"Current Requirements: {requirements}")
+        print("Current Requirements:")
+        for i, req in enumerate(requirements, 1):
+            print(f"{i}. {req}")
         
         # Generate new requirements
         result = RequirementsGenerator()(
@@ -118,20 +120,40 @@ def generate_requirements(context, objective):
         
         # Process new requirements
         if result.new_requirements:
-            print(f"Adding new requirements: {result.new_requirements}")
-            requirements.extend(result.new_requirements)
+            if isinstance(result.new_requirements, str):
+                # Split string into list items
+                new_reqs = [req.strip() for req in result.new_requirements.split('\n') if req.strip()]
+            else:
+                new_reqs = result.new_requirements
+                
+            print("\nAdding new requirements:")
+            for req in new_reqs:
+                print(f"- {req}")
+                requirements.append(req)
         
         # Process unnecessary requirements
         if result.unnecessary_requirements:
-            print(f"Removing unnecessary requirements: {result.unnecessary_requirements}")
-            requirements = [r for r in requirements if r not in result.unnecessary_requirements]
+            if isinstance(result.unnecessary_requirements, str):
+                # Split string into list items
+                remove_reqs = [req.strip() for req in result.unnecessary_requirements.split('\n') if req.strip()]
+            else:
+                remove_reqs = result.unnecessary_requirements
+                
+            print("\nRemoving unnecessary requirements:")
+            for req in remove_reqs:
+                print(f"- {req}")
+                requirements = [r for r in requirements if r not in remove_reqs]
         
         # Check if we should stop
         if result.action.lower().strip() == "stop":
-            print("Requirements generation complete")
+            print("\nRequirements generation complete")
             break
             
         iteration += 1
+    
+    print("\nFinal Requirements:")
+    for i, req in enumerate(requirements, 1):
+        print(f"{i}. {req}")
     
     return requirements
 

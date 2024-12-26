@@ -52,9 +52,9 @@ class MathCalculator(dspy.Module):
             print(f"Current Accuracy: {correct}/{i} ({correct/i:.1%})")
                 
         pipeline_metrics = {
-            "total_tasks": total,
+            "total_tasks": len(dataset),  # Use actual number of evaluated tasks
             "correct_answers": correct,
-            "accuracy": correct / total,
+            "accuracy": correct / len(dataset),
             "time_seconds": time.time() - start_time
         }
         

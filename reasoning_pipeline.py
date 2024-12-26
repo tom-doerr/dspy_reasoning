@@ -4,12 +4,15 @@ import dspy
 lm = dspy.LM(model="deepseek/deepseek-chat")  # Use DeepSeek as the LM
 dspy.settings.configure(lm=lm)
 
+
+action_list = ['reasoning', 'terminate']
 # Step 2: Define the Signature for Action-Oriented Reasoning
 class ReasoningSignature(dspy.Signature):
     context = dspy.InputField(desc="The context to reason about")
     objective = dspy.InputField(desc="The objective to achieve")
     reasoning_output = dspy.OutputField(desc="The reasoning process")
-    action = dspy.OutputField(desc="The action to take, must be either 'reasoning' or 'terminate'")
+    # action = dspy.OutputField(desc="The action to take, must be either 'reasoning' or 'terminate'")
+    action = dspy.OutputField(format=action_list)
 
 # Step 3: Create a Module with the Signature
 class ActionReasoning(dspy.Module):

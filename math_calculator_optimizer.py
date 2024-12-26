@@ -25,7 +25,7 @@ class MathOptimizer:
             ).with_inputs('task'))
         return trainset
 
-    def optimize(self, trainset, num_candidates=10):
+    def optimize(self, trainset, num_candidates=10, initial_model=None):
         # Define the metric function
         def metric(example, prediction, trace=None):
             try:
@@ -47,7 +47,7 @@ class MathOptimizer:
 
         # Run optimization with required parameters
         optimized_calculator = teleprompter.compile(
-            self.calculator,
+            initial_model if initial_model else self.calculator,
             trainset=trainset,
             num_trials=10,  # Number of optimization trials
             max_bootstrapped_demos=3,  # Max bootstrapped examples
@@ -94,8 +94,8 @@ if __name__ == "__main__":
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
         
-        # Run optimization
-        optimized_calculator = optimizer.optimize(trainset, num_candidates=5)
+        # Run optimization on current calculator
+        optimized_calculator = optimizer.optimize(trainset, num_candidates=5, initial_model=current_calculator)
         
         # Evaluate optimized model
         accuracy = evaluate_model(optimized_calculator, dataset)

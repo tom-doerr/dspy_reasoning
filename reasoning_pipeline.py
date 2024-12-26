@@ -13,7 +13,7 @@ class ReasoningSignature(dspy.Signature):
     objective = dspy.InputField(desc="The objective to achieve")
     reasoning_output = dspy.OutputField(desc="The reasoning process")
     # action = dspy.OutputField(desc="The action to take, must be either 'reasoning' or 'terminate'")
-    action = dspy.OutputField(format=action_list)
+    action = dspy.OutputField(format=action_list, desc="The action to take, must be either 'reasoning' or 'terminate'")
 
 # Step 3: Create a Module with the Signature
 class ActionReasoning(dspy.Module):
@@ -43,14 +43,15 @@ def run_reasoning_pipeline(initial_context, initial_objective):
         result = reasoning_pipeline(context=context, objective=objective)
         
         # Validate and process the action
-        action = result.action.lower().strip()
+        print("action:", action)
         if "terminate" in action or "no further" in action:
             print("\nFinal Reasoning Output:", result.reasoning_output)
-            print("Decision: Terminate reasoning process")
+            # print("Decision: Terminate reasoning process")
             break
             
         print("Reasoning Output:", result.reasoning_output)
-        print("Decision: Continue reasoning")
+        # print("Decision: Continue reasoning")
+        action = result.action.lower().strip()
         
         # Update context and objective for next iteration
         context = result.reasoning_output
@@ -61,4 +62,5 @@ def run_reasoning_pipeline(initial_context, initial_objective):
 initial_context = "The Eiffel Tower is located in Paris, France. It was completed in 1889 and is one of the most famous landmarks in the world."
 initial_objective = "Analyze the historical significance of the Eiffel Tower and determine if further investigation is needed"
 
-run_reasoning_pipeline(initial_context, initial_objective)
+if __name__ == "__main__":
+    run_reasoning_pipeline(initial_context, initial_objective)

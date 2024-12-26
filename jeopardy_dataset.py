@@ -38,7 +38,7 @@ class JeopardyDatasetGenerator(dspy.Module):
         self.generate_hint = dspy.ChainOfThought(GenerateHintSignature)
         self.generate_challenging_question = dspy.ChainOfThought(GenerateChallengingQuestionSignature)
 
-    def generate_dataset(self, categories, num_questions_per_category=5):
+    def generate_dataset(self, categories, num_questions_per_category=1):
         dataset = []
         total_questions = len(categories) * num_questions_per_category
         

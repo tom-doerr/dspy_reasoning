@@ -11,10 +11,15 @@ action_list = ['reasoning', 'terminate']
 class ReasoningSignature(dspy.Signature):
     context = dspy.InputField(desc="The context to reason about")
     objective = dspy.InputField(desc="The objective to achieve")
-    reasoning_output = dspy.OutputField(desc="The reasoning process")
-    # action = dspy.OutputField(desc="The action to take, must be either 'reasoning' or 'terminate'")
-    is_valid_reasoning = dspy.OutputField(format=bool, desc="Whether the reasoning is valid")
-    action = dspy.OutputField(format=action_list, desc="The action to take, must be either 'reasoning' or 'terminate'")
+    reasoning_output = dspy.OutputField(desc="The reasoning process including step-by-step calculations")
+    is_valid_reasoning = dspy.OutputField(
+        format=bool, 
+        desc="True only if the reasoning includes correct mathematical calculations that reach the target value"
+    )
+    action = dspy.OutputField(
+        format=action_list, 
+        desc="The action to take, must be either 'reasoning' or 'terminate'"
+    )
 
 # Step 3: Create a Module with the Signature
 class ActionReasoning(dspy.Module):
@@ -60,12 +65,17 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         print("action:", action)
         print("Reasoning Output:", result.reasoning_output)
         print("Is Valid Reasoning:", result.is_valid_reasoning)
-        if "terminate" in action or "no further" in action:
-            # print("Decision: Terminate reasoning process")
+        
+        # Only accept termination if the reasoning is mathematically valid
+        if ("terminate" in action or "no further" in action) and result.is_valid_reasoning:
+            print("Decision: Terminate reasoning process with valid solution")
             break
+        elif ("terminate" in action or "no further" in action) and not result.is_valid_reasoning:
+            print("Decision: Invalid solution found - continuing reasoning")
+            objective = "The previous solution was mathematically incorrect. Try a different approach."
+            continue
             
-        # print("Decision: Continue reasoning")
-        action = result.action.lower().strip()
+        print("Decision: Continue reasoning")
         
         # Update context and objective for next iteration
         context = result.reasoning_output

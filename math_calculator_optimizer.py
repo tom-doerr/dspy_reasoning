@@ -4,6 +4,7 @@ import dspy
 import json
 from dspy.teleprompt import MIPROv2
 from math_calculator import MathCalculator, MathCalculationSignature
+import tqdm
 
 class MathOptimizer:
     def __init__(self):
@@ -18,7 +19,8 @@ class MathOptimizer:
 
     def create_trainset(self, dataset):
         trainset = []
-        for item in dataset:
+        # for item in dataset:
+        for item in tqdm.tqdm(dataset):
             trainset.append(dspy.Example(
                 task=item['task'],
                 solution=item['solution']

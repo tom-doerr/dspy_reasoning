@@ -1,7 +1,7 @@
 <h1 align="center">Reasoning Pipeline Experiments</h1>
 
 <p align="center">
-  <strong>Exploring AI reasoning capabilities through iterative problem-solving</strong>
+  <strong>A simple exploration of AI reasoning through math problems</strong>
 </p>
 
 <p align="center">
@@ -20,35 +20,33 @@
 </p>
 
 <p align="center">
-  This project explores AI reasoning capabilities by implementing a simple pipeline for solving 
-  mathematical and logical problems. It's a playground for experimenting with iterative reasoning 
-  processes and analyzing their effectiveness.
+  This is a simple experiment to explore how AI models can solve math problems through iterative reasoning.
+  It's a work in progress and not meant to be production-ready.
 </p>
 
 <div align="center">
-  <a href="#key-features">Features</a> •
+  <a href="#what-it-does">What it does</a> •
   <a href="#installation">Installation</a> •
   <a href="#usage">Usage</a> •
   <a href="#contributing">Contributing</a> •
   <a href="#license">License</a>
 </div>
 
-## Key Features
+## What it does
 
-- **Jeopardy Question Generation**: Creates challenging Jeopardy-style questions with hints
-- **Reasoning Pipeline**: Implements iterative reasoning with formal logical fallacy detection
-- **Answer Verification**: Uses semantic matching to verify answer correctness
-- **Benchmarking**: Measures pipeline performance on generated questions
-- **Formal Logic Analysis**: Detects and scores common logical fallacies
+- Generates simple math problems
+- Attempts to solve them through iterative reasoning
+- Checks for basic logical errors
+- Tracks some basic metrics
 
-## Experimental Setup
+## Current Limitations
 
-The system processes problems in batches to explore reasoning patterns:
+This is an experimental project with several known limitations:
 
-- **Batch Size**: Small sets of problems (typically 5-10)
-- **Iterative Processing**: Sequential reasoning across problems
-- **Basic Analysis**: Simple metrics collection
-- **Manual Validation**: Human review of solutions
+- Only handles basic math problems
+- Reasoning quality depends heavily on the underlying model
+- Error checking is simplistic
+- Performance metrics are basic
 
 ## System Components
 

@@ -24,9 +24,18 @@ class RequirementsSignature(dspy.Signature):
     context = dspy.InputField(desc="The context of the reasoning")
     objective = dspy.InputField(desc="The objective to achieve")
     current_requirements = dspy.InputField(desc="List of current requirements to achieve the objective")
-    new_requirements = dspy.OutputField(desc="List of new requirements to add to achieve the objective")
-    unnecessary_requirements = dspy.OutputField(desc="List of requirements that are no longer needed to achieve the objective")
-    action = dspy.OutputField(desc="The action to take, must be either 'add_requirements', 'remove_requirements', or 'stop'")
+    new_requirements = dspy.OutputField(
+        desc="List of new requirements to add to achieve the objective. Return an empty list if no new requirements are needed.",
+        default=[]
+    )
+    unnecessary_requirements = dspy.OutputField(
+        desc="List of requirements that are no longer needed to achieve the objective. Return an empty list if no requirements should be removed.",
+        default=[]
+    )
+    action = dspy.OutputField(
+        desc="The action to take: 'add_requirements' if new requirements are needed, 'remove_requirements' if requirements should be removed, or 'stop' if requirements are complete",
+        default="stop"
+    )
 
 class ReasoningAnalysisSignature(dspy.Signature):
     context = dspy.InputField(desc="The context of the reasoning")

@@ -33,7 +33,7 @@ class ReasoningAnalysisSignature(dspy.Signature):
     )
     
     is_valid_reasoning = dspy.OutputField(
-        desc="True if the reasoning is mathematically valid and reaches the correct conclusion"
+        desc="True if the reasoning in the input is valid and reaches the correct conclusion"
     )
     
     action = dspy.OutputField(

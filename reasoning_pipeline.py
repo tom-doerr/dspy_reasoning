@@ -112,6 +112,7 @@ class ActionReasoning(dspy.Module):
         objective_achieved_confidence = getattr(analysis_result, "objective_achieved_confidence", 5)
         is_valid_reasoning = getattr(analysis_result, "is_valid_reasoning", "unknown")
         action = getattr(analysis_result, "action", "reasoning")
+        proof_line_analysis = getattr(analysis_result, "proof_line_analysis", "No proof line analysis provided")
         
         combined = {
             "reasoning": reasoning,
@@ -120,7 +121,8 @@ class ActionReasoning(dspy.Module):
             "objective_achieved_analysis": objective_achieved_analysis,
             "objective_achieved_confidence": objective_achieved_confidence,
             "is_valid_reasoning": is_valid_reasoning,
-            "action": action
+            "action": action,
+            "proof_line_analysis": proof_line_analysis
         }
         return dspy.Prediction(**combined)
 

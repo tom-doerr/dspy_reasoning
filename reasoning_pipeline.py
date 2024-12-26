@@ -11,11 +11,12 @@ action_list = ['reasoning', 'terminate']
 class ReasoningSignature(dspy.Signature):
     context = dspy.InputField(desc="The context to reason about")
     objective = dspy.InputField(desc="The objective to achieve")
-    reasoning = dspy.OutputField(desc="The reasoning process including step-by-step calculations")
-    reasoning_output = dspy.OutputField(desc="The final output of the reasoning process")
+    reasoning = dspy.OutputField(desc="The reasoning process including step-by-step calculations", optional=True)
+    reasoning_output = dspy.OutputField(desc="The final output of the reasoning process", optional=True)
     
     informal_proof = dspy.OutputField(
-        desc="A detailed informal proof written in natural language that explains the reasoning step-by-step in a clear and accessible way, including assumptions, logical connections, and conclusions"
+        desc="A detailed informal proof written in natural language that explains the reasoning step-by-step in a clear and accessible way, including assumptions, logical connections, and conclusions",
+        optional=True
     )
 
 # Define Signature for Analysis
@@ -61,11 +62,11 @@ class ActionReasoning(dspy.Module):
             reasoning_output=reasoning_result.reasoning_output
         )
         
-        # Combine results safely, ensuring all required fields are present
+        # Combine results safely with fallback values
         combined = {
-            "reasoning": reasoning_result.reasoning,
-            "reasoning_output": reasoning_result.reasoning_output,
-            "informal_proof": reasoning_result.informal_proof,
+            "reasoning": getattr(reasoning_result, "reasoning", "No reasoning provided"),
+            "reasoning_output": getattr(reasoning_result, "reasoning_output", "No output provided"),
+            "informal_proof": getattr(reasoning_result, "informal_proof", "No proof provided"),
             "objective_achieved_analysis": analysis_result.objective_achieved_analysis,
             "objective_achieved_confidence": analysis_result.objective_achieved_confidence,
             "is_valid_reasoning": analysis_result.is_valid_reasoning,

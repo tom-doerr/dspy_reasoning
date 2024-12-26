@@ -1,5 +1,6 @@
 import dspy
 import json
+import time
 from tqdm import tqdm
 
 class MathCalculationSignature(dspy.Signature):
@@ -33,9 +34,25 @@ class MathCalculator(dspy.Module):
             except:
                 continue
                 
-        accuracy = correct / total
-        print(f"Math Calculator Accuracy: {accuracy:.1%}")
-        return accuracy
+        pipeline_metrics = {
+            "total_tasks": total,
+            "correct_answers": correct,
+            "accuracy": correct / total,
+            "time_seconds": time.time() - start_time
+        }
+        
+        print(f"\nMath Calculator Evaluation Results:")
+        print(f"Total Tasks: {pipeline_metrics['total_tasks']}")
+        print(f"Correct Answers: {pipeline_metrics['correct_answers']}")
+        print(f"Accuracy: {pipeline_metrics['accuracy']:.1%}")
+        print(f"Time: {pipeline_metrics['time_seconds']:.2f} seconds")
+        
+        # Save results
+        with open("math_calculator_benchmark.json", "w") as f:
+            json.dump(pipeline_metrics, f, indent=2)
+            
+        print("\nBenchmark results saved to math_calculator_benchmark.json")
+        return pipeline_metrics
 
 if __name__ == "__main__":
     # Configure DSPy

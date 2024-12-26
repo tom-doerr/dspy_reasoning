@@ -15,7 +15,7 @@ class ReasoningSignature(dspy.Signature):
     reasoning_output = dspy.OutputField(desc="The final output of the reasoning process", optional=True)
     
     informal_proof = dspy.OutputField(
-        desc="A detailed informal proof written in natural language that explains the reasoning step-by-step in a clear and accessible way, including assumptions, logical connections, and conclusions",
+        desc="A numbered list of steps for the informal proof, with each step clearly explaining part of the reasoning process",
         optional=True
     )
 
@@ -174,13 +174,19 @@ def generate_requirements(context, objective):
     
     return requirements
 
+def track_analysis(analysis_history, analysis, confidence):
+    """Track analysis results as a list of tuples"""
+    analysis_history.append((analysis, int(confidence)))
+    return analysis_history
+
 def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
     # Generate requirements first
     requirements = generate_requirements(initial_context, initial_objective)
     print(f"\nFinal Requirements: {requirements}")
     
-    # Initialize context history
+    # Initialize context and analysis history
     context_history = [initial_context.strip()]
+    analysis_history = []
     
     # Extract question and hint if they exist
     context_lines = initial_context.split('\n')
@@ -203,7 +209,11 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         # Run the reasoning pipeline
         result = reasoning_pipeline(context=current_context, objective=objective)
         
-        # Call callback if provided
+        # Track analysis and call callback if provided
+        analysis_history = track_analysis(analysis_history, 
+            result.objective_achieved_analysis,
+            result.objective_achieved_confidence)
+            
         if callback:
             callback(iteration, current_context, objective, result)
         
@@ -211,10 +221,20 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         action = result.action.lower().strip()
         print("Reasoning Process:", result.reasoning)
         print("Reasoning Output:", result.reasoning_output)
-        print("\nDetailed Informal Proof:")
-        print(result.informal_proof)
+        print("\nDetailed Informal Proof Steps:")
+        if isinstance(result.informal_proof, str):
+            # Convert string proof to list if needed
+            proof_steps = [step.strip() for step in result.informal_proof.split('\n') if step.strip()]
+        else:
+            proof_steps = result.informal_proof
+            
+        for i, step in enumerate(proof_steps, 1):
+            print(f"{i}. {step}")
         print("\nObjective Achievement Analysis:")
         print(f"{result.objective_achieved_analysis} (Confidence: {result.objective_achieved_confidence}/10)")
+        print("\nAnalysis History:")
+        for i, (analysis, confidence) in enumerate(analysis_history, 1):
+            print(f"Iteration {i}: {analysis} (Confidence: {confidence}/10)")
         
         print("action:", action)
         

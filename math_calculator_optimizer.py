@@ -20,7 +20,6 @@ class MathOptimizer:
 
     def create_trainset(self, dataset):
         trainset = []
-        for item in dataset:
         for item in tqdm.tqdm(dataset[:100], ncols=60):
             trainset.append(dspy.Example(
                 task=item['task'],

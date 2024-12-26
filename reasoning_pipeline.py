@@ -96,10 +96,26 @@ class ActionReasoning(dspy.Module):
             reasoning_output=reasoning_result.reasoning_output
         )
         
-        # Combine results safely
-        combined = {}
-        combined.update(reasoning_result.__dict__)
-        combined.update(analysis_result.__dict__)
+        # Combine results safely, ensuring all required fields are present
+        combined = {
+            "reasoning": reasoning_result.reasoning,
+            "reasoning_output": reasoning_result.reasoning_output,
+            "informal_proof": reasoning_result.informal_proof,
+            "is_valid_reasoning": reasoning_result.is_valid_reasoning,
+            "action": reasoning_result.action,
+            "objective_achieved_analysis": analysis_result.objective_achieved_analysis,
+            "objective_achieved_confidence": analysis_result.objective_achieved_confidence,
+            "affirming_consequent_analysis": analysis_result.affirming_consequent_analysis,
+            "affirming_consequent_confidence": analysis_result.affirming_consequent_confidence,
+            "denying_antecedent_analysis": analysis_result.denying_antecedent_analysis,
+            "denying_antecedent_confidence": analysis_result.denying_antecedent_confidence,
+            "undistributed_middle_analysis": analysis_result.undistributed_middle_analysis,
+            "undistributed_middle_confidence": analysis_result.undistributed_middle_confidence,
+            "illicit_major_analysis": analysis_result.illicit_major_analysis,
+            "illicit_major_confidence": analysis_result.illicit_major_confidence,
+            "illicit_minor_analysis": analysis_result.illicit_minor_analysis,
+            "illicit_minor_confidence": analysis_result.illicit_minor_confidence
+        }
         return dspy.Prediction(**combined)
 
 # Step 4: Create an Instance of the Pipeline

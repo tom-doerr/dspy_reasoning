@@ -1,8 +1,8 @@
 import dspy
 import json
 
-# Configure the LM
-lm = dspy.LM(model="deepseek/deepseek-chat")
+# Configure the LM with temperature=1
+lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1)
 dspy.settings.configure(lm=lm)
 
 # Define the signature for Jeopardy question generation

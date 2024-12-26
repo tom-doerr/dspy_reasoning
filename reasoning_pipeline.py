@@ -1,7 +1,7 @@
 import dspy
 
-# Step 1: Configure the LM to use DeepSeek
-lm = dspy.LM(model="deepseek/deepseek-chat")  # Use DeepSeek as the LM
+# Step 1: Configure the LM to use DeepSeek with temperature=1
+lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1)  # Use DeepSeek as the LM
 dspy.settings.configure(lm=lm)
 
 

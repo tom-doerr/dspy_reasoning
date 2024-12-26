@@ -26,8 +26,14 @@ class JeopardyDatasetGenerator(dspy.Module):
 
     def generate_dataset(self, categories, num_questions_per_category=5):
         dataset = []
-        for category in categories:
-            for _ in tqdm(range(num_questions_per_category), desc=f"Generating {category}", leave=False):
+        total_questions = len(categories) * num_questions_per_category
+        
+        # Main progress bar for total questions
+        with tqdm(total=total_questions, desc="Total Progress") as pbar_total:
+            for category in categories:
+                # Nested progress bar for current category
+                with tqdm(range(num_questions_per_category), desc=f"Generating {category}", leave=False) as pbar_category:
+                    for _ in pbar_category:
                 # First generate a challenging answer
                 answer_result = self.generate_answer(category=category)
                 
@@ -41,7 +47,10 @@ class JeopardyDatasetGenerator(dspy.Module):
                     "category": category,
                     "question": question_result.question,
                     "answer": answer_result.answer
-                })
+                        })
+                        # Update both progress bars
+                        pbar_category.update(1)
+                        pbar_total.update(1)
         return dataset
 
 if __name__ == "__main__":

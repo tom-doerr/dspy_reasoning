@@ -14,11 +14,11 @@ class ReasoningSignature(dspy.Signature):
     reasoning = dspy.OutputField(desc="The reasoning process including step-by-step calculations")
     reasoning_output = dspy.OutputField(
         desc="The final output of the reasoning process. If no specific output, repeat the reasoning conclusion.",
-        default=""
+        optional=True
     )
     informal_proof = dspy.OutputField(
         desc="A numbered list of steps for the informal proof. If no proof needed, summarize the reasoning steps.",
-        default=""
+        optional=True
     )
 
 # Define Signature for Analysis
@@ -89,26 +89,32 @@ class ActionReasoning(dspy.Module):
         # First generate the reasoning
         reasoning_result = self.generate_action(context=context, objective=objective)
         
+        # Handle missing fields
+        reasoning = getattr(reasoning_result, "reasoning", "No reasoning provided")
+        reasoning_output = getattr(reasoning_result, "reasoning_output", reasoning)
+        informal_proof = getattr(reasoning_result, "informal_proof", reasoning)
+        
         # Then analyze the reasoning
         analysis_result = self.analyze_reasoning(
             context=context,
-            reasoning=reasoning_result.reasoning,
-            reasoning_output=reasoning_result.reasoning_output
+            reasoning=reasoning,
+            reasoning_output=reasoning_output
         )
         
-        # Ensure all required fields are present
-        reasoning = getattr(reasoning_result, "reasoning", "No reasoning provided")
-        reasoning_output = getattr(reasoning_result, "reasoning_output", reasoning)  # Fallback to reasoning if no output
-        informal_proof = getattr(reasoning_result, "informal_proof", reasoning)  # Fallback to reasoning if no proof
+        # Handle missing analysis fields
+        objective_achieved_analysis = getattr(analysis_result, "objective_achieved_analysis", "No analysis provided")
+        objective_achieved_confidence = getattr(analysis_result, "objective_achieved_confidence", 5)
+        is_valid_reasoning = getattr(analysis_result, "is_valid_reasoning", "unknown")
+        action = getattr(analysis_result, "action", "reasoning")
         
         combined = {
             "reasoning": reasoning,
             "reasoning_output": reasoning_output,
             "informal_proof": informal_proof,
-            "objective_achieved_analysis": analysis_result.objective_achieved_analysis,
-            "objective_achieved_confidence": analysis_result.objective_achieved_confidence,
-            "is_valid_reasoning": analysis_result.is_valid_reasoning,
-            "action": analysis_result.action
+            "objective_achieved_analysis": objective_achieved_analysis,
+            "objective_achieved_confidence": objective_achieved_confidence,
+            "is_valid_reasoning": is_valid_reasoning,
+            "action": action
         }
         return dspy.Prediction(**combined)
 

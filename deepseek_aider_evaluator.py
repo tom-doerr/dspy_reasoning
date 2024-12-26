@@ -4,6 +4,7 @@ from deepeval.benchmarks import Aider
 from deepeval.benchmarks.tasks import AiderTask
 from deepeval.models import DeepSeekModel
 import dspy
+import json
 from tqdm import tqdm
 
 class DeepSeekEvaluator:

@@ -17,14 +17,6 @@ class ReasoningSignature(dspy.Signature):
     informal_proof = dspy.OutputField(
         desc="A detailed informal proof written in natural language that explains the reasoning step-by-step in a clear and accessible way, including assumptions, logical connections, and conclusions"
     )
-    
-    is_valid_reasoning = dspy.OutputField(
-        desc="True if the reasoning is mathematically valid and reaches the correct conclusion"
-    )
-    
-    action = dspy.OutputField(
-        desc="The action to take, must be either 'reasoning' or 'terminate'"
-    )
 
 # Define Signature for Analysis
 class ReasoningAnalysisSignature(dspy.Signature):
@@ -38,6 +30,14 @@ class ReasoningAnalysisSignature(dspy.Signature):
     
     objective_achieved_confidence = dspy.OutputField(
         desc="Confidence score from 1-10 where 1 means extremely sure objective was not achieved and 10 means objective was definitely achieved"
+    )
+    
+    is_valid_reasoning = dspy.OutputField(
+        desc="True if the reasoning is mathematically valid and reaches the correct conclusion"
+    )
+    
+    action = dspy.OutputField(
+        desc="The action to take, must be either 'reasoning' or 'terminate'"
     )
     
 
@@ -66,10 +66,10 @@ class ActionReasoning(dspy.Module):
             "reasoning": reasoning_result.reasoning,
             "reasoning_output": reasoning_result.reasoning_output,
             "informal_proof": reasoning_result.informal_proof,
-            "is_valid_reasoning": reasoning_result.is_valid_reasoning,
-            "action": reasoning_result.action,
             "objective_achieved_analysis": analysis_result.objective_achieved_analysis,
-            "objective_achieved_confidence": analysis_result.objective_achieved_confidence
+            "objective_achieved_confidence": analysis_result.objective_achieved_confidence,
+            "is_valid_reasoning": analysis_result.is_valid_reasoning,
+            "action": analysis_result.action
         }
         return dspy.Prediction(**combined)
 

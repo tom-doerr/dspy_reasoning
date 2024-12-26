@@ -11,7 +11,7 @@ dspy.settings.configure(lm=lm)
 # Define signatures for two-step question generation
 class GenerateAnswerSignature(dspy.Signature):
     category = dspy.InputField(desc="The category for the question")
-    answer = dspy.OutputField(desc="A challenging but specific answer for a Jeopardy question")
+    answer = dspy.OutputField(desc="A challenging answer for a Jeopardy question. Generate just the answer, not the question.")
 
 class GenerateQuestionSignature(dspy.Signature):
     category = dspy.InputField(desc="The category for the question")
@@ -36,12 +36,14 @@ class JeopardyDatasetGenerator(dspy.Module):
                     for _ in pbar_category:
                         # First generate a challenging answer
                         answer_result = self.generate_answer(category=category)
+                        print("answer_result:", answer_result)
                         
                         # Then generate a question that leads to that answer
                         question_result = self.generate_question(
                             category=category,
                             answer=answer_result.answer
                         )
+                        print("question_result:", question_result)
                         
                         dataset.append({
                             "category": category,

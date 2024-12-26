@@ -45,26 +45,6 @@ class MathDatasetGenerator:
             except ZeroDivisionError:
                 continue
             
-            # Calculate solution
-            try:
-                if op == 'addition':
-                    solution = a + b
-                elif op == 'subtraction':
-                    solution = a - b
-                elif op == 'multiplication':
-                    solution = a * b
-                elif op == 'division':
-                    solution = round(a / b, 2)
-                
-                # Add to dataset if valid
-                dataset.append({
-                    'task': task_str,
-                    'numbers': [a, b],
-                    'operation': op,
-                    'solution': solution
-                })
-            except Exception as e:
-                continue
                 
         return dataset
 

@@ -54,6 +54,11 @@ if __name__ == "__main__":
         "Literature",
         "Pop Culture",
         "Geography"
+        "Technology",
+        "Computers",
+        "Artificial Intelligence",
+        "LLMs",
+        "Deep Learning",
     ]
 
     # Generate the dataset

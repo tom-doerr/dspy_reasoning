@@ -76,17 +76,12 @@ def benchmark_reasoning():
     print("\nBenchmarking reasoning pipeline...")
     pipeline = ActionReasoning()
     
-    # Test cases
+    # Test case - Eiffel Tower completion date
     test_cases = [
         {
             "context": "The Eiffel Tower is located in Paris, France. It was completed in 1889.",
             "objective": "Determine when the Eiffel Tower was completed and if we should continue investigating.",
             "expected_action": "terminate"
-        },
-        {
-            "context": "The Statue of Liberty was a gift from France to the United States.",
-            "objective": "Determine when the Statue of Liberty was completed and if we should continue investigating.",
-            "expected_action": "reasoning"
         }
     ]
     

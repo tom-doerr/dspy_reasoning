@@ -41,16 +41,17 @@ class MathOptimizer:
             except:
                 return 0
 
-        # Configure MIPRO optimizer
+        # Configure MIPRO optimizer with reduced memory footprint
         teleprompter = MIPROv2(
             metric=metric,
             num_candidates=num_candidates,
             init_temperature=1.0,
             prompt_model=self.lm,
             task_model=self.lm,
-            num_threads=10,
+            num_threads=4,  # Reduced from 10 to 4
             auto='light',
-            # requires_permission_to_run=False,
+            minibatch_size=10,  # Reduced batch size
+            track_stats=False,  # Disable stats tracking to save memory
         )
 
         # Run optimization with required parameters
@@ -80,7 +81,7 @@ def evaluate_single_task(calculator, item):
     except:
         return 0
 
-def evaluate_model(calculator, dataset, num_threads=10):
+def evaluate_model(calculator, dataset, num_threads=4):
     correct = 0
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = [
@@ -109,16 +110,22 @@ if __name__ == "__main__":
     results.append(("Initial", initial_accuracy))
     print(f"Initial accuracy: {initial_accuracy:.1%}")
     
-    # Run multiple optimization iterations
-    num_iterations = 10
+    # Run multiple optimization iterations with memory cleanup
+    num_iterations = 5  # Reduced from 10
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
         
         # Run optimization on current calculator
-        optimized_calculator = optimizer.optimize(trainset, num_candidates=5, base_model=current_calculator)
+        optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator)
         
         # Evaluate optimized model on validation set
-        accuracy = evaluate_model(optimized_calculator, val_data, num_threads=10)
+        accuracy = evaluate_model(optimized_calculator, val_data, num_threads=4)
+        
+        # Explicit memory cleanup
+        del current_calculator
+        import gc
+        gc.collect()
+        current_calculator = optimized_calculator
         results.append((f"Iteration {i+1}", accuracy))
         print(f"Optimization iteration {i+1} accuracy: {accuracy:.1%}")
         

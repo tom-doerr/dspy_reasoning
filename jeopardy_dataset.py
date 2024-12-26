@@ -71,11 +71,25 @@ class JeopardyDatasetGenerator(dspy.Module):
                             hint=hint_result.hint
                         )
                         
-                        dataset.append({
+                        # Create the dataset entry
+                        entry = {
                             "category": category,
                             "question": question_result.question,
-                            "answer": answer_result.answer
-                        })
+                            "answer": answer_result.answer,
+                            "initial_question": initial_question_result.question,
+                            "hint": hint_result.hint
+                        }
+                        dataset.append(entry)
+                        
+                        # Print formatted output
+                        print("\nGenerated Question:")
+                        print(f"Category: {entry['category']}")
+                        print(f"Initial Question: {entry['initial_question']}")
+                        print(f"Hint: {entry['hint']}")
+                        print(f"Final Question: {entry['question']}")
+                        print(f"Answer: {entry['answer']}")
+                        print("-" * 80)
+                        
                         # Update both progress bars
                         pbar_category.update(1)
                         pbar_total.update(1)

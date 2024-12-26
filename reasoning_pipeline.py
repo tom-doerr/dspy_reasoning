@@ -19,35 +19,39 @@ class ReasoningSignature(dspy.Signature):
         desc="Analysis of whether the fallacy of affirming the consequent was committed"
     )
     affirming_consequent_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether affirming the consequent occurred"
+        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
     )
     
     denying_antecedent_analysis = dspy.OutputField(
         desc="Analysis of whether the fallacy of denying the antecedent was committed"
     )
     denying_antecedent_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether denying the antecedent occurred"
+        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
     )
     
     undistributed_middle_analysis = dspy.OutputField(
         desc="Analysis of whether the fallacy of the undistributed middle was committed"
     )
     undistributed_middle_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether the undistributed middle occurred"
+        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
     )
     
     illicit_major_analysis = dspy.OutputField(
         desc="Analysis of whether the fallacy of illicit major was committed"
     )
     illicit_major_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether illicit major occurred"
+        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
     )
     
     illicit_minor_analysis = dspy.OutputField(
         desc="Analysis of whether the fallacy of illicit minor was committed"
     )
     illicit_minor_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether illicit minor occurred"
+        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
+    )
+    
+    is_valid_reasoning = dspy.OutputField(
+        desc="True if the reasoning is mathematically valid and reaches the correct conclusion"
     )
     
     action = dspy.OutputField(
@@ -105,14 +109,15 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         print(f"Illicit Minor: {result.illicit_minor_analysis} (Confidence: {result.illicit_minor_confidence}/10)")
         print("action:", action)
         
-        # Only accept termination if the reasoning is mathematically valid
-        if ("terminate" in action or "no further" in action) and result.is_valid_reasoning:
-            print("Decision: Terminate reasoning process with valid solution")
-            break
-        elif ("terminate" in action or "no further" in action) and not result.is_valid_reasoning:
-            print("Decision: Invalid solution found - continuing reasoning")
-            objective = "The previous solution was mathematically incorrect. Try a different approach."
-            continue
+        # Only accept termination if explicitly told to
+        if "terminate" in action or "no further" in action:
+            if result.is_valid_reasoning.lower().strip() in ["true", "yes", "correct"]:
+                print("Decision: Terminate reasoning process with valid solution")
+                break
+            else:
+                print("Decision: Invalid solution found - continuing reasoning")
+                objective = "The previous solution was mathematically incorrect. Try a different approach."
+                continue
             
         print("Decision: Continue reasoning")
         

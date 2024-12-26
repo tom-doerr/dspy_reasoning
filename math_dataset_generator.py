@@ -69,13 +69,9 @@ class MathDatasetGenerator:
         return dataset
 
 if __name__ == "__main__":
-    # Configure DSPy
-    lm = dspy.LM(model="deepseek/deepseek-chat", temperature=0.7, cache=False)
-    dspy.settings.configure(lm=lm)
-    
     # Generate dataset
     generator = MathDatasetGenerator()
-    dataset = generator.generate_dataset(num_tasks=1)
+    dataset = generator.generate_dataset(num_tasks=100)
     
     # Save to file
     with open("math_dataset.json", "w") as f:

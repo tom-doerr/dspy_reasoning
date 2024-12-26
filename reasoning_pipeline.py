@@ -91,12 +91,15 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         print(f"Context: {display_context}")
         print(f"Objective: {objective}")
         
+        # Get current context from history
+        current_context = "\n\n".join(context_history)
+        
         # Run the reasoning pipeline
-        result = reasoning_pipeline(context=context, objective=objective)
+        result = reasoning_pipeline(context=current_context, objective=objective)
         
         # Call callback if provided
         if callback:
-            callback(iteration, context, objective, result)
+            callback(iteration, current_context, objective, result)
         
         # Validate and process the action
         action = result.action.lower().strip()

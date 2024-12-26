@@ -51,6 +51,7 @@ class JeopardyDatasetGenerator(dspy.Module):
                             answer=answer_result.answer
                         )
                         
+                        print("hint_result:", hint_result)
                         # Then generate a question that incorporates the hint
                         question_result = self.generate_question(
                             category=category,

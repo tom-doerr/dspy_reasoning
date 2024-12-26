@@ -43,6 +43,11 @@ class ReasoningAnalysisSignature(dspy.Signature):
     context = dspy.InputField(desc="The context of the reasoning")
     reasoning = dspy.InputField(desc="The reasoning process to analyze")
     reasoning_output = dspy.InputField(desc="The output of the reasoning process")
+    informal_proof = dspy.InputField(desc="The numbered list of proof steps to analyze")
+    
+    proof_line_analysis = dspy.OutputField(
+        desc="Detailed analysis of each proof line, checking if it makes logical sense and is mathematically correct"
+    )
     
     objective_achieved_analysis = dspy.OutputField(
         desc="Analysis of whether the objective was fully achieved"
@@ -94,11 +99,12 @@ class ActionReasoning(dspy.Module):
         reasoning_output = getattr(reasoning_result, "reasoning_output", reasoning)
         informal_proof = getattr(reasoning_result, "informal_proof", reasoning)
         
-        # Then analyze the reasoning
+        # Then analyze the reasoning and proof
         analysis_result = self.analyze_reasoning(
             context=context,
             reasoning=reasoning,
-            reasoning_output=reasoning_output
+            reasoning_output=reasoning_output,
+            informal_proof=informal_proof
         )
         
         # Handle missing analysis fields
@@ -267,6 +273,9 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
             
         for i, step in enumerate(proof_steps, 1):
             print(f"{i}. {step}")
+            
+        print("\nProof Line Analysis:")
+        print(result.proof_line_analysis)
         print("\nObjective Achievement Analysis:")
         print(f"{result.objective_achieved_analysis} (Confidence: {result.objective_achieved_confidence}/10)")
         print("\nAnalysis History:")

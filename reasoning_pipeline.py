@@ -15,11 +15,39 @@ class ReasoningSignature(dspy.Signature):
     reasoning_output = dspy.OutputField(desc="The final output of the reasoning process")
     
     # Fallacy detection outputs
-    fallacy_analysis = dspy.OutputField(
-        desc="Analysis of potential logical fallacies in the reasoning process"
+    ad_hominem_analysis = dspy.OutputField(
+        desc="Analysis of whether an ad hominem fallacy was committed"
     )
-    fallacy_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether a logical fallacy was committed"
+    ad_hominem_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether an ad hominem fallacy was committed"
+    )
+    
+    straw_man_analysis = dspy.OutputField(
+        desc="Analysis of whether a straw man fallacy was committed"
+    )
+    straw_man_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether a straw man fallacy was committed"
+    )
+    
+    false_dilemma_analysis = dspy.OutputField(
+        desc="Analysis of whether a false dilemma fallacy was committed"
+    )
+    false_dilemma_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether a false dilemma fallacy was committed"
+    )
+    
+    circular_reasoning_analysis = dspy.OutputField(
+        desc="Analysis of whether circular reasoning was committed"
+    )
+    circular_reasoning_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether circular reasoning was committed"
+    )
+    
+    hasty_generalization_analysis = dspy.OutputField(
+        desc="Analysis of whether a hasty generalization was committed"
+    )
+    hasty_generalization_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether a hasty generalization was committed"
     )
     
     action = dspy.OutputField(
@@ -69,9 +97,12 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         action = result.action.lower().strip()
         print("Reasoning Process:", result.reasoning)
         print("Reasoning Output:", result.reasoning_output)
-        print("\nFallacy Analysis:")
-        print(result.fallacy_analysis)
-        print(f"Fallacy Confidence: {result.fallacy_confidence}/10")
+        print("\nDetailed Fallacy Analysis:")
+        print(f"Ad Hominem: {result.ad_hominem_analysis} (Confidence: {result.ad_hominem_confidence}/10)")
+        print(f"Straw Man: {result.straw_man_analysis} (Confidence: {result.straw_man_confidence}/10)")
+        print(f"False Dilemma: {result.false_dilemma_analysis} (Confidence: {result.false_dilemma_confidence}/10)")
+        print(f"Circular Reasoning: {result.circular_reasoning_analysis} (Confidence: {result.circular_reasoning_confidence}/10)")
+        print(f"Hasty Generalization: {result.hasty_generalization_analysis} (Confidence: {result.hasty_generalization_confidence}/10)")
         print("action:", action)
         
         # Only accept termination if the reasoning is mathematically valid

@@ -69,17 +69,7 @@ class ActionReasoning(dspy.Module):
             "is_valid_reasoning": reasoning_result.is_valid_reasoning,
             "action": reasoning_result.action,
             "objective_achieved_analysis": analysis_result.objective_achieved_analysis,
-            "objective_achieved_confidence": analysis_result.objective_achieved_confidence,
-            "affirming_consequent_analysis": analysis_result.affirming_consequent_analysis,
-            "affirming_consequent_confidence": analysis_result.affirming_consequent_confidence,
-            "denying_antecedent_analysis": analysis_result.denying_antecedent_analysis,
-            "denying_antecedent_confidence": analysis_result.denying_antecedent_confidence,
-            "undistributed_middle_analysis": analysis_result.undistributed_middle_analysis,
-            "undistributed_middle_confidence": analysis_result.undistributed_middle_confidence,
-            "illicit_major_analysis": analysis_result.illicit_major_analysis,
-            "illicit_major_confidence": analysis_result.illicit_major_confidence,
-            "illicit_minor_analysis": analysis_result.illicit_minor_analysis,
-            "illicit_minor_confidence": analysis_result.illicit_minor_confidence
+            "objective_achieved_confidence": analysis_result.objective_achieved_confidence
         }
         return dspy.Prediction(**combined)
 
@@ -124,12 +114,6 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         print("\nObjective Achievement Analysis:")
         print(f"{result.objective_achieved_analysis} (Confidence: {result.objective_achieved_confidence}/10)")
         
-        print("\nFormal Logical Fallacy Analysis:")
-        print(f"Affirming Consequent: {result.affirming_consequent_analysis} (Confidence: {result.affirming_consequent_confidence}/10)")
-        print(f"Denying Antecedent: {result.denying_antecedent_analysis} (Confidence: {result.denying_antecedent_confidence}/10)")
-        print(f"Undistributed Middle: {result.undistributed_middle_analysis} (Confidence: {result.undistributed_middle_confidence}/10)")
-        print(f"Illicit Major: {result.illicit_major_analysis} (Confidence: {result.illicit_major_confidence}/10)")
-        print(f"Illicit Minor: {result.illicit_minor_analysis} (Confidence: {result.illicit_minor_confidence}/10)")
         print("action:", action)
         
         # Only accept termination if explicitly told to

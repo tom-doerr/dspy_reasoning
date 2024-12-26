@@ -135,12 +135,7 @@ Context: {display_context}
 Objective: {objective}
 Reasoning Process: {result.reasoning}
 Reasoning Output: {result.reasoning_output}
-Fallacy Analysis:
-- Affirming Consequent: {result.affirming_consequent_analysis} (Confidence: {result.affirming_consequent_confidence}/10)
-- Denying Antecedent: {result.denying_antecedent_analysis} (Confidence: {result.denying_antecedent_confidence}/10)
-- Undistributed Middle: {result.undistributed_middle_analysis} (Confidence: {result.undistributed_middle_confidence}/10)
-- Illicit Major: {result.illicit_major_analysis} (Confidence: {result.illicit_major_confidence}/10)
-- Illicit Minor: {result.illicit_minor_analysis} (Confidence: {result.illicit_minor_confidence}/10)
+Objective Analysis: {result.objective_achieved_analysis} (Confidence: {result.objective_achieved_confidence}/10)
 """.strip())
         
         # Update context for next iteration with full history

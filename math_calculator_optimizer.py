@@ -42,10 +42,14 @@ class MathOptimizer:
             task_model=self.lm
         )
 
-        # Run optimization
+        # Run optimization with required parameters
         optimized_calculator = teleprompter.compile(
             self.calculator,
-            trainset=trainset
+            trainset=trainset,
+            num_trials=10,  # Number of optimization trials
+            max_bootstrapped_demos=3,  # Max bootstrapped examples
+            max_labeled_demos=4,  # Max labeled examples
+            eval_kwargs={"num_threads": 1}  # Evaluation settings
         )
 
         return optimized_calculator

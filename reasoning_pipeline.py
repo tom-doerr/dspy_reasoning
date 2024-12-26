@@ -30,19 +30,21 @@ class ActionReasoning(dspy.Module):
 reasoning_pipeline = ActionReasoning()
 
 def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
-    # Extract just the question and hint from the initial context
-    context_lines = initial_context.strip().split('\n')
-    question = next(line for line in context_lines if line.startswith("Final Question:"))
-    hint = next(line for line in context_lines if line.startswith("Hint:"))
+    # Use the full context initially
+    context = initial_context.strip()
+    # Extract question and hint if they exist
+    context_lines = context.split('\n')
+    question = next((line for line in context_lines if line.startswith("Final Question:")), context)
+    hint = next((line for line in context_lines if line.startswith("Hint:")), "")
     
-    context = f"{question}\n{hint}"
+    # Create display context for debugging
+    display_context = f"{question}\n{hint}" if hint else question
     objective = initial_objective
     iteration = 1
     
     while True:
         print(f"\n--- Reasoning Iteration {iteration} ---")
-        print(f"Question: {question}")
-        print(f"Hint: {hint}")
+        print(f"Context: {display_context}")
         print(f"Objective: {objective}")
         
         # Run the reasoning pipeline

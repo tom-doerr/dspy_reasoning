@@ -11,12 +11,14 @@ action_list = ['reasoning', 'terminate']
 class ReasoningSignature(dspy.Signature):
     context = dspy.InputField(desc="The context to reason about")
     objective = dspy.InputField(desc="The objective to achieve")
-    reasoning = dspy.OutputField(desc="The reasoning process including step-by-step calculations", optional=True)
-    reasoning_output = dspy.OutputField(desc="The final output of the reasoning process", optional=True)
-    
+    reasoning = dspy.OutputField(desc="The reasoning process including step-by-step calculations")
+    reasoning_output = dspy.OutputField(
+        desc="The final output of the reasoning process. If no specific output, repeat the reasoning conclusion.",
+        default=""
+    )
     informal_proof = dspy.OutputField(
-        desc="A numbered list of steps for the informal proof, with each step clearly explaining part of the reasoning process",
-        optional=True
+        desc="A numbered list of steps for the informal proof. If no proof needed, summarize the reasoning steps.",
+        default=""
     )
 
 # Define Signature for Analysis
@@ -94,11 +96,15 @@ class ActionReasoning(dspy.Module):
             reasoning_output=reasoning_result.reasoning_output
         )
         
-        # Combine results safely with fallback values
+        # Ensure all required fields are present
+        reasoning = getattr(reasoning_result, "reasoning", "No reasoning provided")
+        reasoning_output = getattr(reasoning_result, "reasoning_output", reasoning)  # Fallback to reasoning if no output
+        informal_proof = getattr(reasoning_result, "informal_proof", reasoning)  # Fallback to reasoning if no proof
+        
         combined = {
-            "reasoning": getattr(reasoning_result, "reasoning", "No reasoning provided"),
-            "reasoning_output": getattr(reasoning_result, "reasoning_output", "No output provided"),
-            "informal_proof": getattr(reasoning_result, "informal_proof", "No proof provided"),
+            "reasoning": reasoning,
+            "reasoning_output": reasoning_output,
+            "informal_proof": informal_proof,
             "objective_achieved_analysis": analysis_result.objective_achieved_analysis,
             "objective_achieved_confidence": analysis_result.objective_achieved_confidence,
             "is_valid_reasoning": analysis_result.is_valid_reasoning,

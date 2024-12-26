@@ -63,7 +63,7 @@ if __name__ == "__main__":
         "Science & Nature",
         "Literature",
         "Pop Culture",
-        "Geography"
+        "Geography",
         "Technology",
         "Computers",
         "Artificial Intelligence",

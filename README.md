@@ -5,14 +5,17 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/tom-doerr/reasoning-pipeline/blob/main/LICENSE">
+  <a href="https://github.com/tom-doerr/dspy_reasoning/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
   </a>
-  <a href="https://github.com/tom-doerr/reasoning-pipeline/issues">
-    <img src="https://img.shields.io/github/issues/tom-doerr/reasoning-pipeline" alt="Issues">
+  <a href="https://github.com/tom-doerr/dspy_reasoning/issues">
+    <img src="https://img.shields.io/github/issues/tom-doerr/dspy_reasoning" alt="Issues">
   </a>
-  <a href="https://github.com/tom-doerr/reasoning-pipeline/pulls">
-    <img src="https://img.shields.io/github/issues-pr/tom-doerr/reasoning-pipeline" alt="Pull Requests">
+  <a href="https://github.com/tom-doerr/dspy_reasoning/pulls">
+    <img src="https://img.shields.io/github/issues-pr/tom-doerr/dspy_reasoning" alt="Pull Requests">
+  </a>
+  <a href="https://github.com/tom-doerr/dspy_reasoning">
+    <img src="https://img.shields.io/github/stars/tom-doerr/dspy_reasoning?style=social" alt="Stars">
   </a>
 </p>
 
@@ -21,6 +24,14 @@
   mathematical and logical problems. It's a playground for experimenting with iterative reasoning 
   processes and analyzing their effectiveness.
 </p>
+
+<div align="center">
+  <a href="#key-features">Features</a> •
+  <a href="#installation">Installation</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#contributing">Contributing</a> •
+  <a href="#license">License</a>
+</div>
 
 ## Key Features
 
@@ -73,8 +84,8 @@ Measures pipeline performance by:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/tom-doerr/reasoning-pipeline.git
-   cd reasoning-pipeline
+   git clone https://github.com/tom-doerr/dspy_reasoning.git
+   cd dspy_reasoning
    ```
 
 2. Install dependencies:
@@ -85,6 +96,11 @@ Measures pipeline performance by:
 3. Configure environment variables:
    ```bash
    export DSPY_MODEL=deepseek/deepseek-chat
+   ```
+
+4. (Optional) Install development dependencies:
+   ```bash
+   pip install -r requirements-dev.txt
    ```
 
 ## Usage
@@ -128,9 +144,14 @@ Benchmark results include aggregate statistics across all batches:
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
+
 1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a pull request
+
+Please make sure to update tests as appropriate and follow the coding style of the project.
 
 ## License
 

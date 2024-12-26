@@ -5,14 +5,18 @@ lm = dspy.LM(model="deepseek/deepseek-chat")  # Use DeepSeek as the LM
 dspy.settings.configure(lm=lm)
 
 # Step 2: Define the Signature for Action-Oriented Reasoning
-signature = "context, objective -> reasoning_output, action[reasoning|terminate]"
+class ReasoningSignature(dspy.Signature):
+    context = dspy.InputField(desc="The context to reason about")
+    objective = dspy.InputField(desc="The objective to achieve")
+    reasoning_output = dspy.OutputField(desc="The reasoning process")
+    action = dspy.OutputField(desc="The action to take", choices=["reasoning", "terminate"])
 
 # Step 3: Create a Module with the Signature
 class ActionReasoning(dspy.Module):
     def __init__(self):
         super().__init__()
         # Use ChainOfThought for action-oriented reasoning
-        self.generate_action = dspy.ChainOfThought(signature)
+        self.generate_action = dspy.ChainOfThought(ReasoningSignature)
 
     def forward(self, context, objective):
         # Run the reasoning pipeline

@@ -15,7 +15,8 @@ class MathOptimizer:
     def load_dataset(self, dataset_path="math_dataset.json"):
         with open(dataset_path) as f:
             dataset = json.load(f)
-        return dataset[:100]  # Use subset for optimization
+        # First 100 samples for validation, rest for training
+        return dataset[100:], dataset[:100]
 
     def create_trainset(self, dataset):
         trainset = []
@@ -78,16 +79,16 @@ def evaluate_model(calculator, dataset):
 if __name__ == "__main__":
     optimizer = MathOptimizer()
     
-    # Load and prepare dataset
-    dataset = optimizer.load_dataset()
-    trainset = optimizer.create_trainset(dataset)
+    # Load and split dataset
+    train_data, val_data = optimizer.load_dataset()
+    trainset = optimizer.create_trainset(train_data)
     
     # Initialize results tracking
     results = []
     current_calculator = optimizer.calculator
     
-    # Evaluate initial model
-    initial_accuracy = evaluate_model(current_calculator, dataset)
+    # Evaluate initial model on validation set
+    initial_accuracy = evaluate_model(current_calculator, val_data)
     results.append(("Initial", initial_accuracy))
     print(f"Initial accuracy: {initial_accuracy:.1%}")
     
@@ -99,8 +100,8 @@ if __name__ == "__main__":
         # Run optimization on current calculator
         optimized_calculator = optimizer.optimize(trainset, num_candidates=5, base_model=current_calculator)
         
-        # Evaluate optimized model
-        accuracy = evaluate_model(optimized_calculator, dataset)
+        # Evaluate optimized model on validation set
+        accuracy = evaluate_model(optimized_calculator, val_data)
         results.append((f"Iteration {i+1}", accuracy))
         print(f"Optimization iteration {i+1} accuracy: {accuracy:.1%}")
         

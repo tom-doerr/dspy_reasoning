@@ -39,11 +39,11 @@ def benchmark_jeopardy():
         
         # Calculate current stats
         current_success = quality_metrics["correct_answers"]
-        total = quality_metrics["total_questions"]
-        percentage = (current_success / total) * 100
+        current_total = i
+        success_rate = (current_success / current_total) * 100 if current_total > 0 else 0
         
         # Print progress
-        print(f"\rSuccess: {current_success} | Success Rate: {percentage:.1f}% | Progress: {i}/{total} ({percentage:.1f}%)", end="", flush=True)
+        print(f"\rSuccess: {current_success} | Success Rate: {success_rate:.1f}% | Progress: {i}/{quality_metrics['total_questions']}", end="", flush=True)
     
     elapsed_time = time.time() - start_time
     print()  # New line after progress

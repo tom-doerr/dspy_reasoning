@@ -2,6 +2,7 @@
 
 import dspy
 import json
+from tqdm import tqdm
 
 # Configure the LM with temperature=1.5 and no caching
 lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1.5, cache=False)
@@ -26,7 +27,7 @@ class JeopardyDatasetGenerator(dspy.Module):
     def generate_dataset(self, categories, num_questions_per_category=5):
         dataset = []
         for category in categories:
-            for _ in range(num_questions_per_category):
+            for _ in tqdm(range(num_questions_per_category), desc=f"Generating {category}", leave=False):
                 # First generate a challenging answer
                 answer_result = self.generate_answer(category=category)
                 

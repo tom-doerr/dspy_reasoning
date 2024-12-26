@@ -24,18 +24,32 @@ class MathCalculator(dspy.Module):
         total = len(dataset)
         dataset = dataset[:10]  # Evaluate on a subset of the dataset
         
-        for item in tqdm(dataset, desc="Evaluating Math Calculator"):
+        for i, item in enumerate(dataset, 1):
             task = item['task']
             expected_solution = item['solution']
             
+            print(f"\n--- Evaluating Task {i}/{len(dataset)} ---")
+            print(f"Task: {task}")
+            print(f"Expected Solution: {expected_solution}")
+            
             result = self.calculate(task=task)
+            
+            print(f"\nModel Reasoning:")
+            print(result.reasoning)
+            print(f"\nModel Solution: {result.solution}")
             
             try:
                 # Compare solutions with some tolerance for floating point
                 if abs(float(result.solution) - float(expected_solution)) < 0.01:
                     correct += 1
-            except:
+                    print("✅ Correct")
+                else:
+                    print("❌ Incorrect")
+            except Exception as e:
+                print(f"⚠️ Error evaluating solution: {str(e)}")
                 continue
+            
+            print(f"Current Accuracy: {correct}/{i} ({correct/i:.1%})")
                 
         pipeline_metrics = {
             "total_tasks": total,

@@ -1,8 +1,8 @@
 import dspy
 
-# Step 1: Configure the LM to use DeepSeek with temperature=1
+# Step 1: Configure the LM to use DeepSeek with temperature=1 and no caching
 lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1)  # Use DeepSeek as the LM
-dspy.settings.configure(lm=lm)
+dspy.settings.configure(lm=lm, use_cache=False)
 
 
 action_list = ['reasoning', 'terminate']

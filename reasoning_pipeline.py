@@ -7,7 +7,7 @@ dspy.settings.configure(lm=lm)
 
 
 action_list = ['reasoning', 'terminate']
-# Step 2: Define the Signature for Action-Oriented Reasoning
+# Step 2: Define the Signature for Core Reasoning
 class ReasoningSignature(dspy.Signature):
     context = dspy.InputField(desc="The context to reason about")
     objective = dspy.InputField(desc="The objective to achieve")
@@ -16,6 +16,28 @@ class ReasoningSignature(dspy.Signature):
     
     informal_proof = dspy.OutputField(
         desc="A detailed informal proof written in natural language that explains the reasoning step-by-step in a clear and accessible way, including assumptions, logical connections, and conclusions"
+    )
+    
+    is_valid_reasoning = dspy.OutputField(
+        desc="True if the reasoning is mathematically valid and reaches the correct conclusion"
+    )
+    
+    action = dspy.OutputField(
+        desc="The action to take, must be either 'reasoning' or 'terminate'"
+    )
+
+# Define Signature for Analysis
+class ReasoningAnalysisSignature(dspy.Signature):
+    context = dspy.InputField(desc="The context of the reasoning")
+    reasoning = dspy.InputField(desc="The reasoning process to analyze")
+    reasoning_output = dspy.InputField(desc="The output of the reasoning process")
+    
+    objective_achieved_analysis = dspy.OutputField(
+        desc="Analysis of whether the objective was fully achieved"
+    )
+    
+    objective_achieved_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 where 1 means extremely sure objective was not achieved and 10 means objective was definitely achieved"
     )
     
     # Formal logical fallacy detection
@@ -53,49 +75,32 @@ class ReasoningSignature(dspy.Signature):
     illicit_minor_confidence = dspy.OutputField(
         desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
     )
-    
-    undistributed_middle_analysis = dspy.OutputField(
-        desc="Analysis of whether the fallacy of the undistributed middle was committed"
-    )
-    
-    undistributed_middle_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
-    )
-    
-    illicit_major_analysis = dspy.OutputField(
-        desc="Analysis of whether the fallacy of illicit major was committed"
-    )
-    
-    illicit_major_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
-    )
-    
-    is_valid_reasoning = dspy.OutputField(
-        desc="True if the reasoning is mathematically valid and reaches the correct conclusion"
-    )
-    
-    objective_achieved_analysis = dspy.OutputField(
-        desc="Analysis of whether the objective was fully achieved"
-    )
-    
-    objective_achieved_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 where 1 means extremely sure objective was not achieved and 10 means objective was definitely achieved"
-    )
-    
-    action = dspy.OutputField(
-        desc="The action to take, must be either 'reasoning' or 'terminate'"
-    )
 
 # Step 3: Create a Module with the Signature
 class ActionReasoning(dspy.Module):
     def __init__(self):
         super().__init__()
-        # Use ChainOfThought for action-oriented reasoning
+        # Use ChainOfThought for core reasoning
         self.generate_action = dspy.ChainOfThought(ReasoningSignature)
+        # Separate module for analysis
+        self.analyze_reasoning = dspy.ChainOfThought(ReasoningAnalysisSignature)
 
     def forward(self, context, objective):
-        # Run the reasoning pipeline
-        return self.generate_action(context=context, objective=objective)
+        # First generate the reasoning
+        reasoning_result = self.generate_action(context=context, objective=objective)
+        
+        # Then analyze the reasoning
+        analysis_result = self.analyze_reasoning(
+            context=context,
+            reasoning=reasoning_result.reasoning,
+            reasoning_output=reasoning_result.reasoning_output
+        )
+        
+        # Combine results
+        return dspy.Prediction(
+            **reasoning_result.__dict__,
+            **analysis_result.__dict__
+        )
 
 # Step 4: Create an Instance of the Pipeline
 reasoning_pipeline = ActionReasoning()

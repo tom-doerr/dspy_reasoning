@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import time
 import json
+import dspy
 from jeopardy_dataset import JeopardyDatasetGenerator
 from reasoning_pipeline import ActionReasoning
 

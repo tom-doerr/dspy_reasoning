@@ -32,6 +32,7 @@ objective = "Determine when the Eiffel Tower was completed and if we should cont
 # Step 6: Run the Pipeline
 result = reasoning_pipeline(context=context, objective=objective)
 
-# Step 7: Print the Results
+# Step 7: Validate and Print the Results
+assert result.action in ["reasoning", "terminate"], f"Invalid action: {result.action}"
 print("Reasoning Output:", result.reasoning_output)
 print("Action:", result.action)

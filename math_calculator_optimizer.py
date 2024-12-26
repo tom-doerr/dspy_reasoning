@@ -81,7 +81,9 @@ def evaluate_model(calculator, dataset, num_threads=10):
             executor.submit(evaluate_single_task, calculator, item)
             for item in dataset[:100]
         ]
-        for future in tqdm.tqdm(as_completed(futures), total=len(futures)):
+        for future in tqdm.tqdm(as_completed(futures), total=len(futures), 
+                              bar_format='{l_bar}{bar:20}{r_bar}{bar:-20b}',
+                              ncols=80):
             correct += future.result()
     return correct / 100  # Return accuracy
 

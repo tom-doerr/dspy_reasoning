@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import dspy
 
 # Step 1: Configure the LM to use DeepSeek with temperature=1 and no caching

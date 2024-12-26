@@ -2,7 +2,7 @@
 
 import dspy
 import json
-from dspy.teleprompt import MIPRO
+from dspy.teleprompt import MIPROv2
 from math_calculator import MathCalculator, MathCalculationSignature
 
 class MathOptimizer:
@@ -34,12 +34,15 @@ class MathOptimizer:
                 return 0
 
         # Configure MIPRO optimizer
-        teleprompter = MIPRO(
+        teleprompter = MIPROv2(
             metric=metric,
             num_candidates=num_candidates,
             init_temperature=1.0,
             prompt_model=self.lm,
-            task_model=self.lm
+            task_model=self.lm,
+            num_threads=10,
+            requires_permission_to_run=False,
+            auto='heavy',
         )
 
         # Run optimization with required parameters
@@ -49,7 +52,7 @@ class MathOptimizer:
             num_trials=10,  # Number of optimization trials
             max_bootstrapped_demos=3,  # Max bootstrapped examples
             max_labeled_demos=4,  # Max labeled examples
-            eval_kwargs={"num_threads": 1}  # Evaluation settings
+            # eval_kwargs={"num_threads": 1}  # Evaluation settings
         )
 
         return optimized_calculator

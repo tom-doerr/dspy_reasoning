@@ -11,8 +11,8 @@ signature = "context, objective -> reasoning_output, action"
 class ActionReasoning(dspy.Module):
     def __init__(self):
         super().__init__()
-        # Use Program of Thoughts for action-oriented reasoning
-        self.generate_action = dspy.ProgramOfThought(signature)
+        # Use ChainOfThought for action-oriented reasoning
+        self.generate_action = dspy.ChainOfThought(signature)
 
     def forward(self, context, objective):
         # Run the reasoning pipeline

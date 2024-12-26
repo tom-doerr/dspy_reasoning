@@ -20,7 +20,8 @@ class MathOptimizer:
 
     def create_trainset(self, dataset):
         trainset = []
-        for item in tqdm.tqdm(dataset[:100], ncols=60):
+        # for item in tqdm.tqdm(dataset[:100], ncols=60):
+        for item in dataset:
             trainset.append(dspy.Example(
                 task=item['task'],
                 solution=item['solution']
@@ -104,7 +105,7 @@ if __name__ == "__main__":
     print(f"Initial accuracy: {initial_accuracy:.1%}")
     
     # Run multiple optimization iterations
-    num_iterations = 3
+    num_iterations = 10
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
         

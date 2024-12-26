@@ -40,41 +40,6 @@ class ReasoningAnalysisSignature(dspy.Signature):
         desc="Confidence score from 1-10 where 1 means extremely sure objective was not achieved and 10 means objective was definitely achieved"
     )
     
-    # Formal logical fallacy detection
-    affirming_consequent_analysis = dspy.OutputField(
-        desc="Analysis of whether the fallacy of affirming the consequent was committed"
-    )
-    affirming_consequent_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
-    )
-    
-    denying_antecedent_analysis = dspy.OutputField(
-        desc="Analysis of whether the fallacy of denying the antecedent was committed"
-    )
-    denying_antecedent_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
-    )
-    
-    undistributed_middle_analysis = dspy.OutputField(
-        desc="Analysis of whether the fallacy of the undistributed middle was committed"
-    )
-    undistributed_middle_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
-    )
-    
-    illicit_major_analysis = dspy.OutputField(
-        desc="Analysis of whether the fallacy of illicit major was committed"
-    )
-    illicit_major_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
-    )
-    
-    illicit_minor_analysis = dspy.OutputField(
-        desc="Analysis of whether the fallacy of illicit minor was committed"
-    )
-    illicit_minor_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 where 1 means extremely sure no fallacy was committed and 10 means fallacy was definitely committed"
-    )
 
 # Step 3: Create a Module with the Signature
 class ActionReasoning(dspy.Module):

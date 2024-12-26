@@ -11,10 +11,10 @@ class MathDatasetGenerator:
         self.advanced_operators = ['^', '√', '%']  # Exponentiation, square root, modulo
         self.use_advanced_ops = False  # Toggle advanced operators
         self.parentheses_prob = 0.3  # Probability of adding parentheses
-        self.min_num = 1  # Minimum number value
-        self.max_num = 100  # Maximum number value
-        self.min_ops = 1  # Minimum operations per expression
-        self.max_ops = 5  # Maximum operations per expression
+        self.min_num = -10000  # Minimum number value
+        self.max_num = 10000  # Maximum number value
+        self.min_ops = 5  # Minimum operations per expression
+        self.max_ops = 15  # Maximum operations per expression
         self.allow_decimals = False  # Allow decimal numbers
         self.allow_negatives = False  # Allow negative numbers
         self.allow_variables = False  # Include variables in expressions

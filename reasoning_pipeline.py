@@ -119,8 +119,9 @@ def generate_requirements(context, objective):
     """Iteratively generate and refine requirements for achieving an objective"""
     requirements = []
     iteration = 1
+    max_iterations = 10
     
-    while True:
+    while iteration <= max_iterations:
         print(f"\n--- Requirements Iteration {iteration} ---")
         print("Current Requirements:")
         for i, req in enumerate(requirements, 1):
@@ -186,9 +187,24 @@ def track_analysis(analysis_history, analysis, confidence):
     return analysis_history
 
 def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
-    # Generate requirements first
-    requirements = generate_requirements(initial_context, initial_objective)
-    print(f"\nFinal Requirements: {requirements}")
+    # Generate requirements first with retry logic
+    max_retries = 3
+    requirements = []
+    
+    for attempt in range(max_retries):
+        requirements = generate_requirements(initial_context, initial_objective)
+        print(f"\nFinal Requirements: {requirements}")
+        
+        # If we got requirements, break
+        if requirements:
+            break
+            
+        print(f"\nWarning: Empty requirements list on attempt {attempt + 1}. Retrying...")
+    
+    # If still empty after retries, use a default requirement
+    if not requirements:
+        print("\nWarning: Could not generate requirements after multiple attempts. Using default.")
+        requirements = ["Use the given numbers and operations to achieve the objective"]
     
     # Initialize context and analysis history
     requirements_str = "\n".join(f"- {req}" for req in requirements)

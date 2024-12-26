@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import dspy
 import math
 import random

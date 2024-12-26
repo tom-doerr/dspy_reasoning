@@ -122,6 +122,13 @@ def generate_requirements(context, objective):
     max_iterations = 10
     
     while iteration <= max_iterations:
+        # If we hit max iterations, reset completely and try again
+        if iteration == max_iterations:
+            print("\nWarning: Reached max iterations. Resetting requirements and starting fresh.")
+            requirements = []
+            iteration = 1
+            continue
+            
         print(f"\n--- Requirements Iteration {iteration} ---")
         print("Current Requirements:")
         for i, req in enumerate(requirements, 1):

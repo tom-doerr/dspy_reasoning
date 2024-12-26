@@ -1,13 +1,25 @@
-<h1 align="center">Reasoning Pipeline Benchmark</h1>
+<h1 align="center">Reasoning Pipeline Experiments</h1>
 
 <p align="center">
-  <strong>An advanced AI system for logical reasoning and mathematical problem-solving</strong>
+  <strong>Exploring AI reasoning capabilities through iterative problem-solving</strong>
 </p>
 
 <p align="center">
-  This project implements and benchmarks an AI reasoning pipeline for solving complex problems, 
-  with a focus on logical reasoning and mathematical problem-solving. It provides a robust framework 
-  for generating, analyzing, and verifying solutions through iterative reasoning processes.
+  <a href="https://github.com/tom-doerr/reasoning-pipeline/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  </a>
+  <a href="https://github.com/tom-doerr/reasoning-pipeline/issues">
+    <img src="https://img.shields.io/github/issues/tom-doerr/reasoning-pipeline" alt="Issues">
+  </a>
+  <a href="https://github.com/tom-doerr/reasoning-pipeline/pulls">
+    <img src="https://img.shields.io/github/issues-pr/tom-doerr/reasoning-pipeline" alt="Pull Requests">
+  </a>
+</p>
+
+<p align="center">
+  This project explores AI reasoning capabilities by implementing a simple pipeline for solving 
+  mathematical and logical problems. It's a playground for experimenting with iterative reasoning 
+  processes and analyzing their effectiveness.
 </p>
 
 ## Key Features
@@ -18,14 +30,14 @@
 - **Benchmarking**: Measures pipeline performance on generated questions
 - **Formal Logic Analysis**: Detects and scores common logical fallacies
 
-## Material Batches
+## Experimental Setup
 
-The system processes problems in material batches, allowing for efficient handling of multiple reasoning tasks:
+The system processes problems in batches to explore reasoning patterns:
 
-- **Batch Size**: Configurable number of problems per batch
-- **Parallel Processing**: Simultaneous reasoning across multiple problems
-- **Batch Analysis**: Aggregate performance metrics per batch
-- **Batch Validation**: Cross-verification of solutions within each batch
+- **Batch Size**: Small sets of problems (typically 5-10)
+- **Iterative Processing**: Sequential reasoning across problems
+- **Basic Analysis**: Simple metrics collection
+- **Manual Validation**: Human review of solutions
 
 ## System Components
 

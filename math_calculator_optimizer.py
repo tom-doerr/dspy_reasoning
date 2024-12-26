@@ -9,7 +9,7 @@ import tqdm
 # Set global tqdm configuration
 tqdm.tqdm.pandas()
 tqdm.tqdm.get_lock().locks = []
-tqdm.tqdm.format_dict['ncols'] = 60
+tqdm.tqdm.ncols = 60
 
 class MathOptimizer:
     def __init__(self):

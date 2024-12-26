@@ -20,6 +20,14 @@ class ReasoningSignature(dspy.Signature):
     )
 
 # Define Signature for Analysis
+class RequirementsSignature(dspy.Signature):
+    context = dspy.InputField(desc="The context of the reasoning")
+    objective = dspy.InputField(desc="The objective to achieve")
+    current_requirements = dspy.InputField(desc="List of current requirements to achieve the objective")
+    new_requirements = dspy.OutputField(desc="List of new requirements to add to achieve the objective")
+    unnecessary_requirements = dspy.OutputField(desc="List of requirements that are no longer needed to achieve the objective")
+    action = dspy.OutputField(desc="The action to take, must be either 'add_requirements', 'remove_requirements', or 'stop'")
+
 class ReasoningAnalysisSignature(dspy.Signature):
     context = dspy.InputField(desc="The context of the reasoning")
     reasoning = dspy.InputField(desc="The reasoning process to analyze")
@@ -43,6 +51,19 @@ class ReasoningAnalysisSignature(dspy.Signature):
     
 
 # Step 3: Create a Module with the Signature
+class RequirementsGenerator(dspy.Module):
+    def __init__(self):
+        super().__init__()
+        self.generate_requirements = dspy.ChainOfThought(RequirementsSignature)
+
+    def forward(self, context, objective, current_requirements):
+        result = self.generate_requirements(
+            context=context,
+            objective=objective,
+            current_requirements=current_requirements
+        )
+        return result
+
 class ActionReasoning(dspy.Module):
     def __init__(self):
         super().__init__()
@@ -50,6 +71,8 @@ class ActionReasoning(dspy.Module):
         self.generate_action = dspy.ChainOfThought(ReasoningSignature)
         # Separate module for analysis
         self.analyze_reasoning = dspy.ChainOfThought(ReasoningAnalysisSignature)
+        # Module for requirements generation
+        self.requirements_generator = RequirementsGenerator()
 
     def forward(self, context, objective):
         # First generate the reasoning
@@ -77,7 +100,46 @@ class ActionReasoning(dspy.Module):
 # Step 4: Create an Instance of the Pipeline
 reasoning_pipeline = ActionReasoning()
 
+def generate_requirements(context, objective):
+    """Iteratively generate and refine requirements for achieving an objective"""
+    requirements = []
+    iteration = 1
+    
+    while True:
+        print(f"\n--- Requirements Iteration {iteration} ---")
+        print(f"Current Requirements: {requirements}")
+        
+        # Generate new requirements
+        result = RequirementsGenerator()(
+            context=context,
+            objective=objective,
+            current_requirements=requirements
+        )
+        
+        # Process new requirements
+        if result.new_requirements:
+            print(f"Adding new requirements: {result.new_requirements}")
+            requirements.extend(result.new_requirements)
+        
+        # Process unnecessary requirements
+        if result.unnecessary_requirements:
+            print(f"Removing unnecessary requirements: {result.unnecessary_requirements}")
+            requirements = [r for r in requirements if r not in result.unnecessary_requirements]
+        
+        # Check if we should stop
+        if result.action.lower().strip() == "stop":
+            print("Requirements generation complete")
+            break
+            
+        iteration += 1
+    
+    return requirements
+
 def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
+    # Generate requirements first
+    requirements = generate_requirements(initial_context, initial_objective)
+    print(f"\nFinal Requirements: {requirements}")
+    
     # Initialize context history
     context_history = [initial_context.strip()]
     

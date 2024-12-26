@@ -42,6 +42,7 @@ class MathOptimizer:
             task_model=self.lm,
             num_threads=10,
             auto='heavy',
+            require_permission_to_run=False,
         )
 
         # Run optimization with required parameters

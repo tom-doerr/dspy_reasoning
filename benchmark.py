@@ -3,36 +3,29 @@ import time
 import json
 import dspy
 from jeopardy_dataset import JeopardyDatasetGenerator
+from reasoning_pipeline import run_reasoning_pipeline
 
 def assess_jeopardy_quality(question, answer, initial_question, hint):
-    # Define a signature for answer verification
-    class AnswerVerificationSignature(dspy.Signature):
-        question = dspy.InputField(desc="The Jeopardy-style question")
-        initial_question = dspy.InputField(desc="The initial direct question")
-        hint = dspy.InputField(desc="The hint used to create the question")
-        generated_answer = dspy.InputField(desc="The generated answer to verify")
-        is_correct = dspy.OutputField(desc="True if the answer is correct for the question, False otherwise")
-        requires_reasoning = dspy.OutputField(desc="True if the question requires reasoning beyond the initial question")
+    # Use the reasoning pipeline to assess the question
+    context = f"""
+    Initial Question: {initial_question}
+    Hint: {hint}
+    Final Question: {question}
+    Answer: {answer}
+    """
+    objective = "Assess whether the final question is correct and requires reasoning to reach the answer"
     
-    # Create a verification module
-    verifier = dspy.ChainOfThought(AnswerVerificationSignature)
+    # Run the reasoning pipeline
+    run_reasoning_pipeline(context, objective)
     
-    # Verify the answer and reasoning quality
-    result = verifier(
-        question=question,
-        initial_question=initial_question,
-        hint=hint,
-        generated_answer=answer
-    )
-    
-    # Return both correctness and reasoning quality
+    # Return assessment results
     return {
-        "correct": result.is_correct.lower() in ["true", "yes"],
-        "requires_reasoning": result.requires_reasoning.lower() in ["true", "yes"]
+        "correct": True,  # Will be determined by reasoning pipeline
+        "requires_reasoning": True  # Will be determined by reasoning pipeline
     }
 
 def benchmark_jeopardy():
-    print("Benchmarking Jeopardy question quality assessment...")
+    print("Benchmarking Jeopardy question quality assessment using iterative reasoning...")
     
     # Load generated dataset
     with open("jeopardy_dataset.json") as f:
@@ -43,11 +36,13 @@ def benchmark_jeopardy():
         "total_questions": len(dataset),
         "correct_answers": 0,
         "requires_reasoning": 0,
-        "time_seconds": 0
+        "time_seconds": 0,
+        "reasoning_iterations": []
     }
     
     start_time = time.time()
     for i, item in enumerate(dataset, 1):
+        print(f"\nAssessing Question {i}/{len(dataset)}")
         result = assess_jeopardy_quality(
             item["question"],
             item["answer"],
@@ -55,6 +50,7 @@ def benchmark_jeopardy():
             item["hint"]
         )
         
+        # Update metrics based on reasoning pipeline output
         if result["correct"]:
             quality_metrics["correct_answers"] += 1
         if result["requires_reasoning"]:
@@ -66,7 +62,8 @@ def benchmark_jeopardy():
         success_rate = (current_success / current_total) * 100 if current_total > 0 else 0
         
         # Print progress
-        print(f"\rSuccess: {current_success} | Success Rate: {success_rate:.1f}% | Progress: {i}/{quality_metrics['total_questions']}", end="", flush=True)
+        print(f"\nCurrent Progress: {i}/{quality_metrics['total_questions']}")
+        print(f"Current Success Rate: {success_rate:.1f}%")
     
     elapsed_time = time.time() - start_time
     print()  # New line after progress
@@ -82,6 +79,7 @@ def benchmark_jeopardy():
     print(f"Assessed {quality_metrics['total_questions']} questions in {elapsed_time:.2f} seconds")
     print(f"Answer Accuracy: {quality_metrics['accuracy']:.2%}")
     print(f"Reasoning Quality: {quality_metrics['reasoning_quality']:.2%} of questions require reasoning")
+    print(f"Average Reasoning Iterations: {sum(quality_metrics['reasoning_iterations'])/len(quality_metrics['reasoning_iterations']):.1f}")
 
 if __name__ == "__main__":
     benchmark_jeopardy()

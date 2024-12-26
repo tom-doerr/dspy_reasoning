@@ -4,18 +4,21 @@
   <strong>Exploring AI reasoning capabilities using DSPy</strong>
 </p>
 
-<p align="center>
+<p align="center">
   <a href="https://github.com/tom-doerr/dspy_reasoning/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+    <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square&logo=opensourceinitiative&logoColor=white" alt="License">
   </a>
   <a href="https://github.com/tom-doerr/dspy_reasoning/issues">
-    <img src="https://img.shields.io/github/issues/tom-doerr/dspy_reasoning" alt="Issues">
+    <img src="https://img.shields.io/github/issues/tom-doerr/dspy_reasoning?style=flat-square&logo=github&logoColor=white" alt="Issues">
   </a>
   <a href="https://github.com/tom-doerr/dspy_reasoning/pulls">
-    <img src="https://img.shields.io/github/issues-pr/tom-doerr/dspy_reasoning" alt="Pull Requests">
+    <img src="https://img.shields.io/github/issues-pr/tom-doerr/dspy_reasoning?style=flat-square&logo=github&logoColor=white" alt="Pull Requests">
   </a>
   <a href="https://github.com/tom-doerr/dspy_reasoning">
-    <img src="https://img.shields.io/github/stars/tom-doerr/dspy_reasoning?style=social" alt="Stars">
+    <img src="https://img.shields.io/github/stars/tom-doerr/dspy_reasoning?style=flat-square&logo=github&logoColor=white" alt="Stars">
+  </a>
+  <a href="https://github.com/tom-doerr/dspy_reasoning/commits/main">
+    <img src="https://img.shields.io/github/last-commit/tom-doerr/dspy_reasoning?style=flat-square&logo=github&logoColor=white" alt="Last Commit">
   </a>
 </p>
 

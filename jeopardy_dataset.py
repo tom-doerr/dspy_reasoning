@@ -13,23 +13,30 @@ class GenerateAnswerSignature(dspy.Signature):
     category = dspy.InputField(desc="The category for the question")
     answer = dspy.OutputField(desc="A challenging answer for a Jeopardy question. Generate just the answer, not the question.")
 
+class GenerateInitialQuestionSignature(dspy.Signature):
+    category = dspy.InputField(desc="The category for the question")
+    answer = dspy.InputField(desc="The specific answer to create a question for")
+    question = dspy.OutputField(desc="A Jeopardy-style clue that leads to the answer")
+
 class GenerateHintSignature(dspy.Signature):
     category = dspy.InputField(desc="The category for the question")
     answer = dspy.InputField(desc="The specific answer to create a hint for")
-    hint = dspy.OutputField(desc="An indirect clue that points to the answer without being too obvious")
+    initial_question = dspy.InputField(desc="The initial question that directly leads to the answer")
+    hint = dspy.OutputField(desc="An indirect clue that points to the answer without repeating information from the initial question")
 
-class GenerateQuestionSignature(dspy.Signature):
+class GenerateChallengingQuestionSignature(dspy.Signature):
     category = dspy.InputField(desc="The category for the question")
     answer = dspy.InputField(desc="The specific answer to create a question for")
     hint = dspy.InputField(desc="An indirect clue that points to the answer")
-    question = dspy.OutputField(desc="A challenging Jeopardy-style clue that incorporates the hint and leads to the answer")
+    question = dspy.OutputField(desc="A challenging Jeopardy-style clue that incorporates the hint and requires reasoning to reach the answer")
 
 class JeopardyDatasetGenerator(dspy.Module):
     def __init__(self):
         super().__init__()
         self.generate_answer = dspy.ChainOfThought(GenerateAnswerSignature)
+        self.generate_initial_question = dspy.ChainOfThought(GenerateInitialQuestionSignature)
         self.generate_hint = dspy.ChainOfThought(GenerateHintSignature)
-        self.generate_question = dspy.ChainOfThought(GenerateQuestionSignature)
+        self.generate_challenging_question = dspy.ChainOfThought(GenerateChallengingQuestionSignature)
 
     def generate_dataset(self, categories, num_questions_per_category=5):
         dataset = []
@@ -45,15 +52,21 @@ class JeopardyDatasetGenerator(dspy.Module):
                         answer_result = self.generate_answer(category=category)
                         print("answer_result:", answer_result)
                         
-                        # Generate a hint that points to the answer
-                        hint_result = self.generate_hint(
+                        # First generate an initial direct question
+                        initial_question_result = self.generate_initial_question(
                             category=category,
                             answer=answer_result.answer
                         )
                         
-                        print("hint_result:", hint_result)
-                        # Then generate a question that incorporates the hint
-                        question_result = self.generate_question(
+                        # Generate a hint that points to the answer without repeating the initial question
+                        hint_result = self.generate_hint(
+                            category=category,
+                            answer=answer_result.answer,
+                            initial_question=initial_question_result.question
+                        )
+                        
+                        # Generate a more challenging question using the hint
+                        question_result = self.generate_challenging_question(
                             category=category,
                             answer=answer_result.answer,
                             hint=hint_result.hint

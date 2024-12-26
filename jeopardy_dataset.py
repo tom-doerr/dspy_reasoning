@@ -7,26 +7,39 @@ import json
 lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1.5, cache=False)
 dspy.settings.configure(lm=lm)
 
-# Define the signature for Jeopardy question generation
-class JeopardyQuestionSignature(dspy.Signature):
+# Define signatures for two-step question generation
+class GenerateAnswerSignature(dspy.Signature):
     category = dspy.InputField(desc="The category for the question")
-    question = dspy.OutputField(desc="The Jeopardy-style clue")
-    answer = dspy.OutputField(desc="The correct answer to the clue")
+    answer = dspy.OutputField(desc="A challenging but specific answer for a Jeopardy question")
+
+class GenerateQuestionSignature(dspy.Signature):
+    category = dspy.InputField(desc="The category for the question")
+    answer = dspy.InputField(desc="The specific answer to create a question for")
+    question = dspy.OutputField(desc="A challenging Jeopardy-style clue that leads to the answer")
 
 class JeopardyDatasetGenerator(dspy.Module):
     def __init__(self):
         super().__init__()
-        self.generate_question = dspy.ChainOfThought(JeopardyQuestionSignature)
+        self.generate_answer = dspy.ChainOfThought(GenerateAnswerSignature)
+        self.generate_question = dspy.ChainOfThought(GenerateQuestionSignature)
 
     def generate_dataset(self, categories, num_questions_per_category=5):
         dataset = []
         for category in categories:
             for _ in range(num_questions_per_category):
-                result = self.generate_question(category=category)
+                # First generate a challenging answer
+                answer_result = self.generate_answer(category=category)
+                
+                # Then generate a question that leads to that answer
+                question_result = self.generate_question(
+                    category=category,
+                    answer=answer_result.answer
+                )
+                
                 dataset.append({
                     "category": category,
-                    "question": result.question,
-                    "answer": result.answer
+                    "question": question_result.question,
+                    "answer": answer_result.answer
                 })
         return dataset
 

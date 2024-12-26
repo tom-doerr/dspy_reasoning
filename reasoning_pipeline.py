@@ -13,6 +13,7 @@ class ReasoningSignature(dspy.Signature):
     objective = dspy.InputField(desc="The objective to achieve")
     reasoning_output = dspy.OutputField(desc="The reasoning process")
     # action = dspy.OutputField(desc="The action to take, must be either 'reasoning' or 'terminate'")
+    is_valid_reasoning = dspy.OutputField(format=bool, desc="Whether the reasoning is valid")
     action = dspy.OutputField(format=action_list, desc="The action to take, must be either 'reasoning' or 'terminate'")
 
 # Step 3: Create a Module with the Signature
@@ -57,12 +58,12 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         # Validate and process the action
         action = result.action.lower().strip()
         print("action:", action)
+        print("Reasoning Output:", result.reasoning_output)
+        print("Is Valid Reasoning:", result.is_valid_reasoning)
         if "terminate" in action or "no further" in action:
-            print("\nFinal Reasoning Output:", result.reasoning_output)
             # print("Decision: Terminate reasoning process")
             break
             
-        print("Reasoning Output:", result.reasoning_output)
         # print("Decision: Continue reasoning")
         action = result.action.lower().strip()
         
@@ -72,8 +73,14 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         iteration += 1
 
 # Example usage
-initial_context = "The Eiffel Tower is located in Paris, France. It was completed in 1889 and is one of the most famous landmarks in the world."
-initial_objective = "Analyze the historical significance of the Eiffel Tower and determine if further investigation is needed"
+initial_context = """
+How can you solve the Game of 24 using the numbers 3,
+4, 5, and 6?
+Let's think step by step:
+1. We need to use basic arithmetic operations (+, -, *, /) to 
+get 24.
+2. One possible solution is: (3 * 4) + (5 + 6) = 24."""
+initial_objective = "Generate a new solution using the same numbers."
 
 if __name__ == "__main__":
     run_reasoning_pipeline(initial_context, initial_objective)

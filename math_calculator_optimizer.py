@@ -6,6 +6,11 @@ from dspy.teleprompt import MIPROv2
 from math_calculator import MathCalculator, MathCalculationSignature
 import tqdm
 
+# Set global tqdm configuration
+tqdm.tqdm.pandas()
+tqdm.tqdm.get_lock().locks = []
+tqdm.tqdm.format_dict['ncols'] = 60
+
 class MathOptimizer:
     def __init__(self):
         self.lm = dspy.LM(model="deepseek/deepseek-chat", temperature=0.3, cache=False)

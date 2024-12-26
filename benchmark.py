@@ -5,10 +5,24 @@ import dspy
 from jeopardy_dataset import JeopardyDatasetGenerator
 from reasoning_pipeline import run_reasoning_pipeline
 
+class VerifyAnswerSignature(dspy.Signature):
+    predicted_answer = dspy.InputField(desc="The answer predicted by the model")
+    correct_answer = dspy.InputField(desc="The known correct answer")
+    verification = dspy.OutputField(desc="True if answers match semantically, False otherwise")
+
+class AnswerVerifier(dspy.Module):
+    def __init__(self):
+        super().__init__()
+        self.verify = dspy.ChainOfThought(VerifyAnswerSignature)
+
+    def forward(self, predicted_answer, correct_answer):
+        return self.verify(predicted_answer=predicted_answer, correct_answer=correct_answer)
+
 def verify_answer_match(predicted_answer, correct_answer):
-    """Check if the predicted answer matches the correct answer"""
-    # Simple case-insensitive comparison
-    return predicted_answer.strip().lower() == correct_answer.strip().lower()
+    """Check if the predicted answer matches the correct answer using semantic verification"""
+    verifier = AnswerVerifier()
+    result = verifier(predicted_answer, correct_answer)
+    return result.verification.lower().strip() in ["true", "yes", "correct"]
 
 def benchmark_reasoning_pipeline():
     print("Benchmarking Reasoning Pipeline Performance...")

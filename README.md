@@ -44,7 +44,7 @@ Measures pipeline performance by:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/reasoning-pipeline.git
+   git clone https://github.com/tom-doerr/reasoning-pipeline.git
    cd reasoning-pipeline
    ```
 

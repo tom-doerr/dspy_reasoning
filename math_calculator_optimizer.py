@@ -65,16 +65,24 @@ class MathOptimizer:
         optimized_calculator.save(path)
         print(f"Optimized model saved to {path}")
 
-def evaluate_model(calculator, dataset):
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def evaluate_single_task(calculator, item):
+    try:
+        result = calculator(task=item['task'])
+        return int(abs(float(result.solution) - float(item['solution'])) < 0.01)
+    except:
+        return 0
+
+def evaluate_model(calculator, dataset, num_threads=10):
     correct = 0
-    # for item in dataset[:100]:  # Evaluate on first 100 samples
-    for item in tqdm.tqdm(dataset[:100]):
-        try:
-            result = calculator(task=item['task'])
-            if abs(float(result.solution) - float(item['solution'])) < 0.01:
-                correct += 1
-        except:
-            continue
+    with ThreadPoolExecutor(max_workers=num_threads) as executor:
+        futures = [
+            executor.submit(evaluate_single_task, calculator, item)
+            for item in dataset[:100]
+        ]
+        for future in tqdm.tqdm(as_completed(futures), total=len(futures)):
+            correct += future.result()
     return correct / 100  # Return accuracy
 
 if __name__ == "__main__":
@@ -90,7 +98,7 @@ if __name__ == "__main__":
     
     # Evaluate initial model on validation set
     print("Evaluating initial model...")
-    initial_accuracy = evaluate_model(current_calculator, val_data)
+    initial_accuracy = evaluate_model(current_calculator, val_data, num_threads=10)
     results.append(("Initial", initial_accuracy))
     print(f"Initial accuracy: {initial_accuracy:.1%}")
     
@@ -103,7 +111,7 @@ if __name__ == "__main__":
         optimized_calculator = optimizer.optimize(trainset, num_candidates=5, base_model=current_calculator)
         
         # Evaluate optimized model on validation set
-        accuracy = evaluate_model(optimized_calculator, val_data)
+        accuracy = evaluate_model(optimized_calculator, val_data, num_threads=10)
         results.append((f"Iteration {i+1}", accuracy))
         print(f"Optimization iteration {i+1} accuracy: {accuracy:.1%}")
         

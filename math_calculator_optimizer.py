@@ -41,8 +41,8 @@ class MathOptimizer:
             prompt_model=self.lm,
             task_model=self.lm,
             num_threads=10,
-            auto='heavy',
-            require_permission_to_run=False,
+            auto='medium',
+            # requires_permission_to_run=False,
         )
 
         # Run optimization with required parameters
@@ -52,6 +52,7 @@ class MathOptimizer:
             num_trials=10,  # Number of optimization trials
             max_bootstrapped_demos=3,  # Max bootstrapped examples
             max_labeled_demos=4,  # Max labeled examples
+            requires_permission_to_run=False,
             # eval_kwargs={"num_threads": 1}  # Evaluation settings
         )
 

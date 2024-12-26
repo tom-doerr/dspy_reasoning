@@ -2,8 +2,8 @@ import dspy
 import json
 
 # Configure the LM with temperature=1 and no caching
-lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1)
-dspy.settings.configure(lm=lm, use_cache=False)
+lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1, cache=False)
+dspy.settings.configure(lm=lm)
 
 # Define the signature for Jeopardy question generation
 class JeopardyQuestionSignature(dspy.Signature):

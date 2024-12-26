@@ -95,6 +95,8 @@ class JeopardyDatasetGenerator(dspy.Module):
                         pbar_total.update(1)
         return dataset
 
+import argparse
+
 if __name__ == "__main__":
     # Initialize the generator
     generator = JeopardyDatasetGenerator()
@@ -113,8 +115,27 @@ if __name__ == "__main__":
         "Deep Learning",
     ]
 
-    # Generate the dataset
-    dataset = generator.generate_dataset(categories)
+    # Set up argument parser
+    parser = argparse.ArgumentParser(description="Generate Jeopardy questions")
+    parser.add_argument("-n", "--num_questions", type=int, default=50,
+                       help="Number of questions to generate (default: 50)")
+    args = parser.parse_args()
+
+    # Calculate number of questions per category
+    num_categories = len(categories)
+    base_questions = args.num_questions // num_categories
+    extra_questions = args.num_questions % num_categories
+
+    # Generate questions, cycling through categories
+    dataset = []
+    for i in range(num_categories):
+        questions_to_generate = base_questions + (1 if i < extra_questions else 0)
+        if questions_to_generate > 0:
+            category_questions = generator.generate_dataset(
+                [categories[i]],
+                num_questions_per_category=questions_to_generate
+            )
+            dataset.extend(category_questions)
 
     # Save to JSON file
     with open("jeopardy_dataset.json", "w") as f:

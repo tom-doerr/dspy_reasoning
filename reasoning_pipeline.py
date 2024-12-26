@@ -96,11 +96,11 @@ class ActionReasoning(dspy.Module):
             reasoning_output=reasoning_result.reasoning_output
         )
         
-        # Combine results
-        return dspy.Prediction(
-            **reasoning_result.__dict__,
-            **analysis_result.__dict__
-        )
+        # Combine results safely
+        combined = {}
+        combined.update(reasoning_result.__dict__)
+        combined.update(analysis_result.__dict__)
+        return dspy.Prediction(**combined)
 
 # Step 4: Create an Instance of the Pipeline
 reasoning_pipeline = ActionReasoning()

@@ -29,19 +29,36 @@ class ActionReasoning(dspy.Module):
 # Step 4: Create an Instance of the Pipeline
 reasoning_pipeline = ActionReasoning()
 
-# Step 5: Provide Input and Get the Action-Oriented Reasoning
-context = "The Eiffel Tower is located in Paris, France. It was completed in 1889 and is one of the most famous landmarks in the world."
-objective = "Determine when the Eiffel Tower was completed and if we should continue investigating."
+def run_reasoning_pipeline(initial_context, initial_objective):
+    context = initial_context
+    objective = initial_objective
+    iteration = 1
+    
+    while True:
+        print(f"\n--- Reasoning Iteration {iteration} ---")
+        print(f"Current Context: {context}")
+        print(f"Current Objective: {objective}")
+        
+        # Run the reasoning pipeline
+        result = reasoning_pipeline(context=context, objective=objective)
+        
+        # Validate and process the action
+        action = result.action.lower().strip()
+        if "terminate" in action or "no further" in action:
+            print("\nFinal Reasoning Output:", result.reasoning_output)
+            print("Decision: Terminate reasoning process")
+            break
+            
+        print("Reasoning Output:", result.reasoning_output)
+        print("Decision: Continue reasoning")
+        
+        # Update context and objective for next iteration
+        context = result.reasoning_output
+        objective = "Continue reasoning based on previous analysis"
+        iteration += 1
 
-# Step 6: Run the Pipeline
-result = reasoning_pipeline(context=context, objective=objective)
+# Example usage
+initial_context = "The Eiffel Tower is located in Paris, France. It was completed in 1889 and is one of the most famous landmarks in the world."
+initial_objective = "Analyze the historical significance of the Eiffel Tower and determine if further investigation is needed"
 
-# Step 7: Validate and Print the Results
-action = result.action.lower().strip()
-if "terminate" in action or "no further" in action:
-    action = "terminate"
-else:
-    action = "reasoning"
-
-print("Reasoning Output:", result.reasoning_output)
-print("Action:", action)
+run_reasoning_pipeline(initial_context, initial_objective)

@@ -5,7 +5,7 @@ lm = dspy.LM(model="deepseek/deepseek-chat")  # Use DeepSeek as the LM
 dspy.settings.configure(lm=lm)
 
 # Step 2: Define the Signature for Action-Oriented Reasoning
-signature = "context, objective -> reasoning_output, action"
+signature = "context, objective -> reasoning_output, action[reasoning|terminate]"
 
 # Step 3: Create a Module with the Signature
 class ActionReasoning(dspy.Module):

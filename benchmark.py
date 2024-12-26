@@ -43,7 +43,7 @@ def benchmark_jeopardy():
         percentage = (current_success / total) * 100
         
         # Print progress
-        print(f"\rProgress: {i}/{total} | Success: {current_success} | Progress: {percentage:.1f}% | Success Rate: {percentage:.1f}%", end="", flush=True)
+        print(f"\rSuccess: {current_success} | Success Rate: {percentage:.1f}% | Progress: {i}/{total} ({percentage:.1f}%)", end="", flush=True)
     
     elapsed_time = time.time() - start_time
     print()  # New line after progress

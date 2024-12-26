@@ -60,7 +60,7 @@ if __name__ == "__main__":
     
     # Generate dataset
     generator = MathDatasetGenerator()
-    dataset = generator.generate_dataset(num_tasks=1000)
+    dataset = generator.generate_dataset(num_tasks=1)
     
     # Save to file
     with open("math_dataset.json", "w") as f:

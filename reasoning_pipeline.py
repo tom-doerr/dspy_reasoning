@@ -14,6 +14,10 @@ class ReasoningSignature(dspy.Signature):
     reasoning = dspy.OutputField(desc="The reasoning process including step-by-step calculations")
     reasoning_output = dspy.OutputField(desc="The final output of the reasoning process")
     
+    informal_proof = dspy.OutputField(
+        desc="A detailed informal proof written in natural language that explains the reasoning step-by-step in a clear and accessible way, including assumptions, logical connections, and conclusions"
+    )
+    
     # Formal logical fallacy detection
     affirming_consequent_analysis = dspy.OutputField(
         desc="Analysis of whether the fallacy of affirming the consequent was committed"
@@ -113,6 +117,8 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         action = result.action.lower().strip()
         print("Reasoning Process:", result.reasoning)
         print("Reasoning Output:", result.reasoning_output)
+        print("\nDetailed Informal Proof:")
+        print(result.informal_proof)
         print("\nObjective Achievement Analysis:")
         print(f"{result.objective_achieved_analysis} (Confidence: {result.objective_achieved_confidence}/10)")
         

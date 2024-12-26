@@ -1,7 +1,7 @@
 import dspy
 
-# Step 1: Configure the LM
-lm = dspy.OpenAI(model="gpt-3.5-turbo")
+# Step 1: Configure the LM to use DeepSeek
+lm = dspy.LM(model="deepseek/deepseek-chat")  # Use DeepSeek as the LM
 dspy.settings.configure(lm=lm)
 
 # Step 2: Define the Signature for Multi-Step Reasoning

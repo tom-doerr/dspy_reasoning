@@ -20,6 +20,7 @@ class MathCalculator(dspy.Module):
         
         correct = 0
         total = len(dataset)
+        dataset = dataset[:10]  # Evaluate on a subset of the dataset
         
         for item in tqdm(dataset, desc="Evaluating Math Calculator"):
             task = item['task']

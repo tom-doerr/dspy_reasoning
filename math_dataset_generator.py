@@ -6,28 +6,59 @@ from tqdm import tqdm
 
 class MathDatasetGenerator:
     def __init__(self):
-        self.operators = ['+', '-', '*', '/']
+        # Configurable parameters for difficulty
+        self.basic_operators = ['+', '-', '*', '/']
+        self.advanced_operators = ['^', '√', '%']  # Exponentiation, square root, modulo
+        self.use_advanced_ops = False  # Toggle advanced operators
         self.parentheses_prob = 0.3  # Probability of adding parentheses
+        self.min_num = 1  # Minimum number value
+        self.max_num = 100  # Maximum number value
+        self.min_ops = 1  # Minimum operations per expression
+        self.max_ops = 5  # Maximum operations per expression
+        self.allow_decimals = False  # Allow decimal numbers
+        self.allow_negatives = False  # Allow negative numbers
+        self.allow_variables = False  # Include variables in expressions
+        self.variables = ['x', 'y', 'z']  # Available variables
         
-    def _generate_number(self, min_val=1, max_val=100):
-        return random.randint(min_val, max_val)
+    def _generate_number(self):
+        if self.allow_decimals:
+            return round(random.uniform(self.min_num, self.max_num), 2)
+        return random.randint(self.min_num, self.max_num)
         
-    def _generate_expression(self, min_ops=1, max_ops=5):
-        # Generate number of operations (1 to 5)
-        num_ops = random.randint(min_ops, max_ops)
+    def _generate_expression(self):
+        # Generate number of operations
+        num_ops = random.randint(self.min_ops, self.max_ops)
         
-        # Start with a single number
-        expression = str(self._generate_number())
+        # Choose starting element (number or variable)
+        if self.allow_variables and random.random() < 0.3:  # 30% chance to start with variable
+            expression = random.choice(self.variables)
+        else:
+            expression = str(self._generate_number())
         
         for _ in range(num_ops):
-            op = random.choice(self.operators)
-            next_num = str(self._generate_number())
-            
-            # Decide whether to add parentheses
-            if random.random() < self.parentheses_prob:
-                expression = f"({expression} {op} {next_num})"
+            # Choose operator
+            if self.use_advanced_ops and random.random() < 0.5:  # 50% chance for advanced op
+                op = random.choice(self.advanced_operators)
             else:
-                expression = f"{expression} {op} {next_num}"
+                op = random.choice(self.basic_operators)
+            
+            # Choose next element (number or variable)
+            if self.allow_variables and random.random() < 0.3:  # 30% chance for variable
+                next_element = random.choice(self.variables)
+            else:
+                next_element = str(self._generate_number())
+            
+            # Handle special operators
+            if op == '√':  # Square root
+                expression = f"{op}({expression})"
+            elif op == '^':  # Exponentiation
+                expression = f"({expression}){op}{next_element}"
+            else:
+                # Decide whether to add parentheses
+                if random.random() < self.parentheses_prob:
+                    expression = f"({expression} {op} {next_element})"
+                else:
+                    expression = f"{expression} {op} {next_element}"
                 
         return expression
 

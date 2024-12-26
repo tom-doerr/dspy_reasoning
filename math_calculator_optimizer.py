@@ -20,8 +20,8 @@ class MathOptimizer:
 
     def create_trainset(self, dataset):
         trainset = []
-        # for item in dataset:
-        for item in tqdm.tqdm(dataset):
+        for item in dataset:
+        # for item in tqdm.tqdm(dataset):
             trainset.append(dspy.Example(
                 task=item['task'],
                 solution=item['solution']
@@ -67,7 +67,8 @@ class MathOptimizer:
 
 def evaluate_model(calculator, dataset):
     correct = 0
-    for item in dataset[:100]:  # Evaluate on first 100 samples
+    # for item in dataset[:100]:  # Evaluate on first 100 samples
+    for item in tqdm.tqdm(dataset[:100]):
         try:
             result = calculator(task=item['task'])
             if abs(float(result.solution) - float(item['solution'])) < 0.01:
@@ -88,6 +89,7 @@ if __name__ == "__main__":
     current_calculator = optimizer.calculator
     
     # Evaluate initial model on validation set
+    print("Evaluating initial model...")
     initial_accuracy = evaluate_model(current_calculator, val_data)
     results.append(("Initial", initial_accuracy))
     print(f"Initial accuracy: {initial_accuracy:.1%}")

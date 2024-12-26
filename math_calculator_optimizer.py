@@ -62,6 +62,17 @@ class MathOptimizer:
         optimized_calculator.save(path)
         print(f"Optimized model saved to {path}")
 
+def evaluate_model(calculator, dataset):
+    correct = 0
+    for item in dataset[:100]:  # Evaluate on first 100 samples
+        try:
+            result = calculator(task=item['task'])
+            if abs(float(result.solution) - float(item['solution'])) < 0.01:
+                correct += 1
+        except:
+            continue
+    return correct / 100  # Return accuracy
+
 if __name__ == "__main__":
     optimizer = MathOptimizer()
     
@@ -69,11 +80,38 @@ if __name__ == "__main__":
     dataset = optimizer.load_dataset()
     trainset = optimizer.create_trainset(dataset)
     
-    # Run optimization
-    print("Starting optimization process...")
-    optimized_calculator = optimizer.optimize(trainset, num_candidates=5)
+    # Initialize results tracking
+    results = []
+    current_calculator = optimizer.calculator
     
-    # Save optimized model
-    optimizer.save_optimized_model(optimized_calculator)
+    # Evaluate initial model
+    initial_accuracy = evaluate_model(current_calculator, dataset)
+    results.append(("Initial", initial_accuracy))
+    print(f"Initial accuracy: {initial_accuracy:.1%}")
+    
+    # Run multiple optimization iterations
+    num_iterations = 3
+    for i in range(num_iterations):
+        print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
+        
+        # Run optimization
+        optimized_calculator = optimizer.optimize(trainset, num_candidates=5)
+        
+        # Evaluate optimized model
+        accuracy = evaluate_model(optimized_calculator, dataset)
+        results.append((f"Iteration {i+1}", accuracy))
+        print(f"Optimization iteration {i+1} accuracy: {accuracy:.1%}")
+        
+        # Save optimized model
+        model_path = f"optimized_math_calculator_iter{i+1}.json"
+        optimizer.save_optimized_model(optimized_calculator, model_path)
+        
+        # Set as current calculator for next iteration
+        current_calculator = optimized_calculator
+    
+    # Print all results
+    print("\nFinal Results:")
+    for stage, accuracy in results:
+        print(f"{stage}: {accuracy:.1%}")
     
     print("Optimization complete!")

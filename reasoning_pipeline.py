@@ -14,40 +14,40 @@ class ReasoningSignature(dspy.Signature):
     reasoning = dspy.OutputField(desc="The reasoning process including step-by-step calculations")
     reasoning_output = dspy.OutputField(desc="The final output of the reasoning process")
     
-    # Fallacy detection outputs
-    ad_hominem_analysis = dspy.OutputField(
-        desc="Analysis of whether an ad hominem fallacy was committed"
+    # Formal logical fallacy detection
+    affirming_consequent_analysis = dspy.OutputField(
+        desc="Analysis of whether the fallacy of affirming the consequent was committed"
     )
-    ad_hominem_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether an ad hominem fallacy was committed"
-    )
-    
-    straw_man_analysis = dspy.OutputField(
-        desc="Analysis of whether a straw man fallacy was committed"
-    )
-    straw_man_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether a straw man fallacy was committed"
+    affirming_consequent_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether affirming the consequent occurred"
     )
     
-    false_dilemma_analysis = dspy.OutputField(
-        desc="Analysis of whether a false dilemma fallacy was committed"
+    denying_antecedent_analysis = dspy.OutputField(
+        desc="Analysis of whether the fallacy of denying the antecedent was committed"
     )
-    false_dilemma_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether a false dilemma fallacy was committed"
-    )
-    
-    circular_reasoning_analysis = dspy.OutputField(
-        desc="Analysis of whether circular reasoning was committed"
-    )
-    circular_reasoning_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether circular reasoning was committed"
+    denying_antecedent_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether denying the antecedent occurred"
     )
     
-    hasty_generalization_analysis = dspy.OutputField(
-        desc="Analysis of whether a hasty generalization was committed"
+    undistributed_middle_analysis = dspy.OutputField(
+        desc="Analysis of whether the fallacy of the undistributed middle was committed"
     )
-    hasty_generalization_confidence = dspy.OutputField(
-        desc="Confidence score from 1-10 on whether a hasty generalization was committed"
+    undistributed_middle_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether the undistributed middle occurred"
+    )
+    
+    illicit_major_analysis = dspy.OutputField(
+        desc="Analysis of whether the fallacy of illicit major was committed"
+    )
+    illicit_major_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether illicit major occurred"
+    )
+    
+    illicit_minor_analysis = dspy.OutputField(
+        desc="Analysis of whether the fallacy of illicit minor was committed"
+    )
+    illicit_minor_confidence = dspy.OutputField(
+        desc="Confidence score from 1-10 on whether illicit minor occurred"
     )
     
     action = dspy.OutputField(
@@ -97,12 +97,12 @@ def run_reasoning_pipeline(initial_context, initial_objective, callback=None):
         action = result.action.lower().strip()
         print("Reasoning Process:", result.reasoning)
         print("Reasoning Output:", result.reasoning_output)
-        print("\nDetailed Fallacy Analysis:")
-        print(f"Ad Hominem: {result.ad_hominem_analysis} (Confidence: {result.ad_hominem_confidence}/10)")
-        print(f"Straw Man: {result.straw_man_analysis} (Confidence: {result.straw_man_confidence}/10)")
-        print(f"False Dilemma: {result.false_dilemma_analysis} (Confidence: {result.false_dilemma_confidence}/10)")
-        print(f"Circular Reasoning: {result.circular_reasoning_analysis} (Confidence: {result.circular_reasoning_confidence}/10)")
-        print(f"Hasty Generalization: {result.hasty_generalization_analysis} (Confidence: {result.hasty_generalization_confidence}/10)")
+        print("\nFormal Logical Fallacy Analysis:")
+        print(f"Affirming Consequent: {result.affirming_consequent_analysis} (Confidence: {result.affirming_consequent_confidence}/10)")
+        print(f"Denying Antecedent: {result.denying_antecedent_analysis} (Confidence: {result.denying_antecedent_confidence}/10)")
+        print(f"Undistributed Middle: {result.undistributed_middle_analysis} (Confidence: {result.undistributed_middle_confidence}/10)")
+        print(f"Illicit Major: {result.illicit_major_analysis} (Confidence: {result.illicit_major_confidence}/10)")
+        print(f"Illicit Minor: {result.illicit_minor_analysis} (Confidence: {result.illicit_minor_confidence}/10)")
         print("action:", action)
         
         # Only accept termination if the reasoning is mathematically valid

@@ -8,20 +8,27 @@ from tqdm import tqdm
 lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1.5, cache=False)
 dspy.settings.configure(lm=lm)
 
-# Define signatures for two-step question generation
+# Define signatures for three-step question generation
 class GenerateAnswerSignature(dspy.Signature):
     category = dspy.InputField(desc="The category for the question")
     answer = dspy.OutputField(desc="A challenging answer for a Jeopardy question. Generate just the answer, not the question.")
 
+class GenerateHintSignature(dspy.Signature):
+    category = dspy.InputField(desc="The category for the question")
+    answer = dspy.InputField(desc="The specific answer to create a hint for")
+    hint = dspy.OutputField(desc="An indirect clue that points to the answer without being too obvious")
+
 class GenerateQuestionSignature(dspy.Signature):
     category = dspy.InputField(desc="The category for the question")
     answer = dspy.InputField(desc="The specific answer to create a question for")
-    question = dspy.OutputField(desc="A challenging Jeopardy-style clue that leads to the answer")
+    hint = dspy.InputField(desc="An indirect clue that points to the answer")
+    question = dspy.OutputField(desc="A challenging Jeopardy-style clue that incorporates the hint and leads to the answer")
 
 class JeopardyDatasetGenerator(dspy.Module):
     def __init__(self):
         super().__init__()
         self.generate_answer = dspy.ChainOfThought(GenerateAnswerSignature)
+        self.generate_hint = dspy.ChainOfThought(GenerateHintSignature)
         self.generate_question = dspy.ChainOfThought(GenerateQuestionSignature)
 
     def generate_dataset(self, categories, num_questions_per_category=5):
@@ -38,10 +45,17 @@ class JeopardyDatasetGenerator(dspy.Module):
                         answer_result = self.generate_answer(category=category)
                         print("answer_result:", answer_result)
                         
-                        # Then generate a question that leads to that answer
-                        question_result = self.generate_question(
+                        # Generate a hint that points to the answer
+                        hint_result = self.generate_hint(
                             category=category,
                             answer=answer_result.answer
+                        )
+                        
+                        # Then generate a question that incorporates the hint
+                        question_result = self.generate_question(
+                            category=category,
+                            answer=answer_result.answer,
+                            hint=hint_result.hint
                         )
                         print("question_result:", question_result)
                         

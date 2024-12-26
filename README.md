@@ -1,8 +1,16 @@
-# Reasoning Pipeline Benchmark
+<h1 align="center">Reasoning Pipeline Benchmark</h1>
 
-This project implements and benchmarks an AI reasoning pipeline for solving complex problems, with a focus on logical reasoning and mathematical problem-solving.
+<p align="center">
+  <strong>An advanced AI system for logical reasoning and mathematical problem-solving</strong>
+</p>
 
-## Features
+<p align="center">
+  This project implements and benchmarks an AI reasoning pipeline for solving complex problems, 
+  with a focus on logical reasoning and mathematical problem-solving. It provides a robust framework 
+  for generating, analyzing, and verifying solutions through iterative reasoning processes.
+</p>
+
+## Key Features
 
 - **Jeopardy Question Generation**: Creates challenging Jeopardy-style questions with hints
 - **Reasoning Pipeline**: Implements iterative reasoning with formal logical fallacy detection
@@ -10,7 +18,16 @@ This project implements and benchmarks an AI reasoning pipeline for solving comp
 - **Benchmarking**: Measures pipeline performance on generated questions
 - **Formal Logic Analysis**: Detects and scores common logical fallacies
 
-## Components
+## Material Batches
+
+The system processes problems in material batches, allowing for efficient handling of multiple reasoning tasks:
+
+- **Batch Size**: Configurable number of problems per batch
+- **Parallel Processing**: Simultaneous reasoning across multiple problems
+- **Batch Analysis**: Aggregate performance metrics per batch
+- **Batch Validation**: Cross-verification of solutions within each batch
+
+## System Components
 
 ### 1. Jeopardy Dataset Generator
 Generates challenging Jeopardy-style questions across multiple categories:
@@ -79,9 +96,17 @@ Customize settings in the scripts:
 - `reasoning_pipeline.py`: Modify reasoning parameters
 - `benchmark.py`: Change evaluation metrics
 
-## Results
+## Performance Metrics
 
-Benchmark results include:
+The system tracks comprehensive performance metrics across material batches:
+
+- **Batch Processing Time**: Average time per batch
+- **Batch Accuracy**: Percentage of correct solutions per batch
+- **Iteration Efficiency**: Average reasoning iterations per problem
+- **Fallacy Detection Rate**: Percentage of detected logical fallacies
+- **Objective Achievement**: Success rate in meeting problem objectives
+
+Benchmark results include aggregate statistics across all batches:
 - Overall accuracy
 - Average iterations per question
 - Total processing time

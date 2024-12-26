@@ -67,7 +67,7 @@ class MathDatasetGenerator:
     def generate_dataset(self, num_tasks=100):
         dataset = []
         
-        for _ in tqdm(range(num_tasks), desc="Generating Math Tasks"):
+        for _ in tqdm(range(num_tasks), desc="Generating Math Tasks", ncols=60):
             expression = self._generate_expression()
             
             # Calculate solution using eval (safe since we control the input)

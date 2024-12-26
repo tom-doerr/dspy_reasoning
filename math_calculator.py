@@ -34,7 +34,7 @@ class MathCalculator(dspy.Module):
         total = len(dataset)
         dataset = dataset[:100]  # Evaluate on a subset of the dataset
         
-        for i, item in enumerate(dataset, 1):
+        for i, item in enumerate(tqdm.tqdm(dataset, ncols=60), 1):
             task = item['task']
             expected_solution = item['solution']
             

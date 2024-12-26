@@ -42,57 +42,54 @@ class JeopardyDatasetGenerator(dspy.Module):
         dataset = []
         total_questions = len(categories) * num_questions_per_category
         
-        # Main progress bar for total questions
-        with tqdm(total=total_questions, desc="Total Progress") as pbar_total:
+        # Single progress bar for all questions
+        with tqdm(total=total_questions, desc="Generating Questions") as pbar:
             for category in categories:
-                # Nested progress bar for current category
-                with tqdm(range(num_questions_per_category), desc=f"Generating {category}", leave=False) as pbar_category:
-                    for _ in pbar_category:
-                        # First generate a challenging answer
-                        answer_result = self.generate_answer(category=category)
-                        
-                        # First generate an initial direct question
-                        initial_question_result = self.generate_initial_question(
-                            category=category,
-                            answer=answer_result.answer
-                        )
-                        
-                        # Generate a hint that points to the answer without repeating the initial question
-                        hint_result = self.generate_hint(
-                            category=category,
-                            answer=answer_result.answer,
-                            initial_question=initial_question_result.question
-                        )
-                        
-                        # Generate a more challenging question using the hint
-                        question_result = self.generate_challenging_question(
-                            category=category,
-                            answer=answer_result.answer,
-                            hint=hint_result.hint
-                        )
-                        
-                        # Create the dataset entry
-                        entry = {
-                            "category": category,
-                            "question": question_result.question,
-                            "answer": answer_result.answer,
-                            "initial_question": initial_question_result.question,
-                            "hint": hint_result.hint
-                        }
-                        dataset.append(entry)
-                        
-                        # Print formatted output
-                        print("\nGenerated Question:")
-                        print(f"Category: {entry['category']}")
-                        print(f"Initial Question: {entry['initial_question']}")
-                        print(f"Hint: {entry['hint']}")
-                        print(f"Final Question: {entry['question']}")
-                        print(f"Answer: {entry['answer']}")
-                        print("-" * 80)
-                        
-                        # Update both progress bars
-                        pbar_category.update(1)
-                        pbar_total.update(1)
+                for _ in range(num_questions_per_category):
+                    # First generate a challenging answer
+                    answer_result = self.generate_answer(category=category)
+                    
+                    # First generate an initial direct question
+                    initial_question_result = self.generate_initial_question(
+                        category=category,
+                        answer=answer_result.answer
+                    )
+                    
+                    # Generate a hint that points to the answer without repeating the initial question
+                    hint_result = self.generate_hint(
+                        category=category,
+                        answer=answer_result.answer,
+                        initial_question=initial_question_result.question
+                    )
+                    
+                    # Generate a more challenging question using the hint
+                    question_result = self.generate_challenging_question(
+                        category=category,
+                        answer=answer_result.answer,
+                        hint=hint_result.hint
+                    )
+                    
+                    # Create the dataset entry
+                    entry = {
+                        "category": category,
+                        "question": question_result.question,
+                        "answer": answer_result.answer,
+                        "initial_question": initial_question_result.question,
+                        "hint": hint_result.hint
+                    }
+                    dataset.append(entry)
+                    
+                    # Print formatted output
+                    print("\nGenerated Question:")
+                    print(f"Category: {entry['category']}")
+                    print(f"Initial Question: {entry['initial_question']}")
+                    print(f"Hint: {entry['hint']}")
+                    print(f"Final Question: {entry['question']}")
+                    print(f"Answer: {entry['answer']}")
+                    print("-" * 80)
+                    
+                    # Update progress bar
+                    pbar.update(1)
         return dataset
 
 import argparse

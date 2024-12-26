@@ -14,12 +14,12 @@ class ActionReasoning(dspy.Module):
         # Use Program of Thoughts for action-oriented reasoning
         self.generate_action = dspy.ProgramOfThought(signature)
 
-    def forward(self, context, question):
+    def forward(self, context, objective):
         # Run the reasoning pipeline
-        return self.generate_answer(context=context, question=question)
+        return self.generate_action(context=context, objective=objective)
 
 # Step 4: Create an Instance of the Pipeline
-reasoning_pipeline = MultiStepReasoning()
+reasoning_pipeline = ActionReasoning()
 
 # Step 5: Provide Input and Get the Action-Oriented Reasoning
 context = "The Eiffel Tower is located in Paris, France. It was completed in 1889 and is one of the most famous landmarks in the world."

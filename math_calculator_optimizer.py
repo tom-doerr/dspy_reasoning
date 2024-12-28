@@ -33,7 +33,7 @@ class MathOptimizer:
             ).with_inputs('task'))
         return trainset
 
-    def optimize(self, trainset, num_candidates=5, base_model=None):
+    def optimize(self, trainset, num_candidates=10, base_model=None):
         # Define the metric function
         def metric(example, prediction, trace=None):
             try:
@@ -50,7 +50,6 @@ class MathOptimizer:
             task_model=self.lm,
             num_threads=4,  # Reduced from 10 to 4
             auto='light',
-            minibatch_size=10,  # Reduced batch size
             track_stats=False,  # Disable stats tracking to save memory
         )
 
@@ -111,7 +110,7 @@ if __name__ == "__main__":
     print(f"Initial accuracy: {initial_accuracy:.1%}")
     
     # Run multiple optimization iterations with memory cleanup
-    num_iterations = 5  # Reduced from 10
+    num_iterations = 20
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
         

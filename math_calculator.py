@@ -92,10 +92,7 @@ class MathCalculator(dspy.Module):
             print(f"Task: {task}")
             print(f"Expected Solution: {expected_solution}")
             
-            if False:
-                result = self.calculate(task=task, context="")
-            else:
-                result = self.forward(task)
+            result = self.forward(task)
 
             
             print(f"\nModel Reasoning:")

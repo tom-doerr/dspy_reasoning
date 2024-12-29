@@ -97,7 +97,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def evaluate_single_task(calculator, item):
     try:
-        result = calculator(task=item['task'], context="")
+        result = calculator.forward(item['task'])
         # Handle both string and numeric solutions
         pred_solution = float(result.solution) if isinstance(result.solution, str) else result.solution
         exp_solution = float(item['solution']) if isinstance(item['solution'], str) else item['solution']

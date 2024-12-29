@@ -3,7 +3,7 @@
 import dspy
 import json
 import time
-from tqdm import tqdm
+import tqdm
 
 class MathCalculationSignature(dspy.Signature):
     """Solve math calculation tasks using chain-of-thought reasoning"""

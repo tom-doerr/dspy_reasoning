@@ -4,6 +4,7 @@ import dspy
 import json
 import time
 import tqdm
+from pprint import pprint
 
 class MathCalculationSignature(dspy.Signature):
     """Solve math calculation tasks using chain-of-thought reasoning"""
@@ -28,7 +29,7 @@ class MathCalculator(dspy.Module):
         
         for iteration in range(max_iterations):
             result = self.calculate(task=task, notes_input=notes)
-            print("result:", result)
+            pprint("result:", result)
             
             # Accumulate reasoning
             final_reasoning += f"\nIteration {iteration + 1} Reasoning:\n{result.reasoning}"

@@ -19,18 +19,18 @@ class MathCalculationSignature(dspy.Signature):
     )
 
 class MathCalculator(dspy.Module):
-    def __init__(self):
+    def __init__(self, max_iterations=5):
         super().__init__()
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
+        self.max_iterations = max_iterations
 
     def forward(self, task):
         """Forward pass for the math calculator with iterative reasoning"""
-        max_iterations = 5
         context = ""  # Accumulates all reasoning, solutions and notes
         final_reasoning = ""
         final_solution = ""
         
-        for iteration in range(max_iterations):
+        for iteration in range(self.max_iterations):
             try:
                 result = self.calculate(task=task, context=context)
                 

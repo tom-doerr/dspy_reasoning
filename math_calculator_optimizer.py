@@ -16,6 +16,16 @@ class MathOptimizer:
         self.lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1.5, cache=False)
         dspy.settings.configure(lm=self.lm)
         self.calculator = MathCalculator()
+        self.student = None
+        self.teacher = None
+        
+    def set_student(self, student):
+        """Set the student model for optimization"""
+        self.student = student
+        
+    def set_teacher(self, teacher):
+        """Set the teacher model for optimization"""
+        self.teacher = teacher
         
     def load_dataset(self, dataset_path="math_dataset.json"):
         with open(dataset_path) as f:
@@ -81,19 +91,21 @@ class MathOptimizer:
         # Run optimization with required parameters
         if False:
                 optimized_calculator = teleprompter.compile(
-                base_model,
-                trainset=trainset,
-                num_trials=7,  # Number of optimization trials
-                max_bootstrapped_demos=3,  # Max bootstrapped examples
-                max_labeled_demos=4,  # Max labeled examples
-                requires_permission_to_run=False,
-                minibatch=True,
-            )
+                    student=self.student if self.student else base_model,
+                    teacher=self.teacher if self.teacher else base_model,
+                    trainset=trainset,
+                    num_trials=7,  # Number of optimization trials
+                    max_bootstrapped_demos=3,  # Max bootstrapped examples
+                    max_labeled_demos=4,  # Max labeled examples
+                    requires_permission_to_run=False,
+                    minibatch=True,
+                )
         else:
                 optimized_calculator = teleprompter.compile(
-                base_model,
-                trainset=trainset[:100],
-            )
+                    student=self.student if self.student else base_model,
+                    teacher=self.teacher if self.teacher else base_model,
+                    trainset=trainset[:100],
+                )
 
 
         return optimized_calculator

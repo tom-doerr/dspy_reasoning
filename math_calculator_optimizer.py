@@ -62,10 +62,11 @@ class MathOptimizer:
         else:
             teleprompter = BootstrapFewShotWithRandomSearch(
             metric=metric,
-            max_bootstrapped_demos=8,
+            max_bootstrapped_demos=4,
             max_labeled_demos=8,
-            num_candidate_programs=10,
-            num_threads=10
+            # num_candidate_programs=10,
+            num_candidate_programs=1,
+            num_threads=100
         )
 
         # Run optimization with required parameters
@@ -82,7 +83,7 @@ class MathOptimizer:
         else:
                 optimized_calculator = teleprompter.compile(
                 base_model if base_model else self.calculator,
-                trainset=trainset,
+                trainset=trainset[:100],
             )
 
 
@@ -107,7 +108,7 @@ def evaluate_single_task(calculator, item):
         print(f"Evaluation error for task {item['task']}: {e}")
         return 0
 
-def evaluate_model(calculator, dataset, num_threads=4):
+def evaluate_model(calculator, dataset, num_threads=10):
     correct = 0
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = [
@@ -140,12 +141,13 @@ if __name__ == "__main__":
     num_iterations = 5
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
+        current_calculator = current_calculator.deepcopy()
         
         # Run optimization on current calculator
         optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator)
         
         # Evaluate optimized model on validation set
-        accuracy = evaluate_model(optimized_calculator, val_data, num_threads=4)
+        accuracy = evaluate_model(optimized_calculator, val_data, num_threads=20)
         
         # Explicit memory cleanup
         del current_calculator

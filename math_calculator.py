@@ -11,9 +11,12 @@ class MathCalculationSignature(dspy.Signature):
     task = dspy.InputField(desc="The math calculation task to solve")
     notes_input = dspy.InputField(desc="Notes from previous iterations", default="")
     reasoning = dspy.OutputField(desc="Step-by-step reasoning to solve the task")
-    solution = dspy.OutputField(desc="The numerical solution to the task")
+    solution = dspy.OutputField(desc="The numerical solution to the task. Must be a number.")
     notes_output = dspy.OutputField(desc="Notes for next iteration", default="")
-    iteration_control = dspy.OutputField(desc="Should be 'continue' or 'terminate', reply continue if you are not sure if the solution is correct", default="continue")
+    iteration_control = dspy.OutputField(
+        desc="Must be either 'continue' or 'terminate'. Use 'terminate' only when absolutely certain the solution is correct.",
+        default="continue"
+    )
 
 class MathCalculator(dspy.Module):
     def __init__(self):
@@ -28,26 +31,36 @@ class MathCalculator(dspy.Module):
         final_solution = ""
         
         for iteration in range(max_iterations):
-            result = self.calculate(task=task, notes_input=notes)
-            print("Iteration result:")
-            print(f"Reasoning: {result.reasoning}")
-            print(f"Solution: {result.solution}")
-            print(f"Notes: {result.notes_output}")
-            print(f"Control: {result.iteration_control}")
-            print("-" * 40)
-            
-            # Accumulate reasoning
-            final_reasoning += f"\nIteration {iteration + 1} Reasoning:\n{result.reasoning}"
-            
-            # Update notes for next iteration
-            notes = result.notes_output
-            
-            # Store the latest solution
-            final_solution = result.solution
-            
-            # Check if we should terminate
-            if result.iteration_control.lower() == "terminate":
-                break
+            try:
+                result = self.calculate(task=task, notes_input=notes)
+                
+                # Validate required fields
+                if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
+                    raise ValueError("Missing required fields in model output")
+                    
+                print("Iteration result:")
+                print(f"Reasoning: {result.reasoning}")
+                print(f"Solution: {result.solution}")
+                print(f"Notes: {result.notes_output}")
+                print(f"Control: {result.iteration_control}")
+                print("-" * 40)
+                
+                # Accumulate reasoning
+                final_reasoning += f"\nIteration {iteration + 1} Reasoning:\n{result.reasoning}"
+                
+                # Update notes for next iteration
+                notes = result.notes_output
+                
+                # Store the latest solution
+                final_solution = result.solution
+                
+                # Check if we should terminate
+                if result.iteration_control.lower().strip() == "terminate":
+                    break
+                    
+            except Exception as e:
+                print(f"Error in iteration {iteration + 1}: {str(e)}")
+                continue
                 
         return dspy.Prediction(
             reasoning=final_reasoning,

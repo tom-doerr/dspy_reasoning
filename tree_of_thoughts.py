@@ -78,7 +78,7 @@ class ForestOfThoughts:
         logger.info(f"Initialized ForestOfThoughts with {num_trees} trees, {num_thoughts} thoughts per tree")
 
     def generate_thoughts(self, task: str) -> List[dspy.Prediction]:
-        """Generate multiple thoughts in parallel using all trees.
+        """Generate multiple thoughts using ToT approach.
         
         Args:
             task: The math task to solve
@@ -86,50 +86,95 @@ class ForestOfThoughts:
         Returns:
             List of predictions from all trees
         """
+        thoughts = []
         with ThreadPoolExecutor() as executor:
-            futures = [
-                executor.submit(tree.generate_thought, task)
-                for tree in self.trees
-                for _ in range(self.num_thoughts)
-            ]
-            return [f.result() for f in futures]
+            # Generate multiple thoughts per tree
+            futures = []
+            for tree in self.trees:
+                # Generate initial thought
+                futures.append(executor.submit(tree.generate_thought, task))
+                
+                # Generate alternative thoughts by varying the context
+                for i in range(self.num_thoughts - 1):
+                    context = f"Alternative approach {i+1}: Try a different method"
+                    futures.append(executor.submit(tree.generate_thought, task, context))
+            
+            # Collect results
+            for future in futures:
+                try:
+                    thoughts.append(future.result())
+                except Exception as e:
+                    logger.warning(f"Error generating thought: {e}")
+                    
+        return thoughts
 
     def evaluate_thoughts(
         self, 
         thoughts: List[dspy.Prediction], 
         expected: float
     ) -> List[Tuple[dspy.Prediction, int]]:
-        """Score thoughts and update tree scores.
+        """Evaluate thoughts using ToT approach.
         
         Args:
             thoughts: List of predictions to evaluate
             expected: Expected solution value
             
         Returns:
-            List of tuples containing (prediction, accuracy_score)
+            List of tuples containing (prediction, score)
         """
         scored = []
-        for thought in thoughts:
-            # Find which tree generated this thought
-            for tree in self.trees:
-                if thought in tree.thoughts:
-                    accuracy = tree.evaluate_thought(thought, expected)
-                    scored.append((thought, accuracy))
-                    break
-            else:
-                logger.warning("Thought not found in any tree")
-                scored.append((thought, 0))
-        return scored
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            for thought in thoughts:
+                # Evaluate each thought independently
+                futures.append(executor.submit(self._evaluate_single_thought, thought, expected))
+            
+            # Collect results
+            for future in futures:
+                try:
+                    scored.append(future.result())
+                except Exception as e:
+                    logger.warning(f"Error evaluating thought: {e}")
+                    scored.append((None, 0))
+                    
+        return [s for s in scored if s[0] is not None]
+        
+    def _evaluate_single_thought(self, thought: dspy.Prediction, expected: float) -> Tuple[dspy.Prediction, int]:
+        """Evaluate a single thought using multiple criteria."""
+        # Find which tree generated this thought
+        for tree in self.trees:
+            if thought in tree.thoughts:
+                # Evaluate correctness
+                accuracy = tree.evaluate_thought(thought, expected)
+                
+                # Evaluate reasoning quality
+                reasoning_score = self._evaluate_reasoning(thought.reasoning)
+                
+                # Combine scores
+                score = int(accuracy * 0.7 + reasoning_score * 0.3)
+                return (thought, score)
+                
+        logger.warning("Thought not found in any tree")
+        return (thought, 0)
+        
+    def _evaluate_reasoning(self, reasoning: str) -> float:
+        """Evaluate the quality of reasoning."""
+        # Simple heuristic - count reasoning steps
+        steps = reasoning.split('\n')
+        step_count = len([s for s in steps if s.strip()])
+        
+        # Normalize score between 0 and 1
+        return min(1.0, step_count / 10.0)
 
     def solve(self, task: str, expected: float) -> Optional[dspy.Prediction]:
-        """Main reasoning process to find consensus solution.
+        """Main reasoning process using ToT approach.
         
         Args:
             task: The math task to solve
             expected: Expected solution value
             
         Returns:
-            Consensus prediction found, or None if no valid solution
+            Best prediction found, or None if no valid solution
         """
         best = None
         best_score = 0
@@ -137,38 +182,33 @@ class ForestOfThoughts:
         for iteration in range(self.max_iterations):
             logger.info(f"Iteration {iteration + 1}/{self.max_iterations}")
             
-            # Share insights between trees periodically
-            if iteration > 0 and iteration % self.communication_interval == 0:
-                self._share_insights(expected)
-            
-            # Generate thoughts across all trees
+            # Generate thoughts using ToT approach
             thoughts = self.generate_thoughts(task)
             
-            # Evaluate thoughts and update tree scores
+            # Evaluate thoughts using multiple criteria
             scored = self.evaluate_thoughts(thoughts, expected)
             
-            # Update consensus threshold adaptively
-            if self.adaptive_threshold:
-                self._update_consensus_threshold(scored)
-            
-            # Find consensus solution
-            consensus = self._find_consensus(scored)
-            if consensus:
-                best = consensus
-                best_score = 1
-                logger.info("Consensus solution found")
-                break
-                
-            # Track best individual solution
+            # Select best thought for this iteration
             current_best, score = max(scored, key=lambda x: x[1])
+            
+            # Update best overall solution
             if score > best_score:
                 best = current_best
                 best_score = score
                 logger.info(f"New best solution found with score {best_score}")
                 
+            # Share insights between trees
+            if iteration > 0 and iteration % self.communication_interval == 0:
+                self._share_insights(expected)
+                
+            # Check for termination conditions
             if best_score == 1:  # Perfect solution found
                 logger.info("Perfect solution found, terminating early")
                 break
+                
+            # Update consensus threshold adaptively
+            if self.adaptive_threshold:
+                self._update_consensus_threshold(scored)
                 
         return best
         

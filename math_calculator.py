@@ -3,7 +3,7 @@
 import dspy
 import json
 import time
-import tqdm
+from tqdm import tqdm
 
 class MathCalculationSignature(dspy.Signature):
     """Solve math calculation tasks using chain-of-thought reasoning"""
@@ -58,7 +58,7 @@ class MathCalculator(dspy.Module):
         total = len(dataset)
         dataset = dataset[:100]  # Evaluate on a subset of the dataset
         
-        for i, item in enumerate(tqdm(dataset, ncols=60), 1):
+        for i, item in enumerate(tqdm.tqdm(dataset, ncols=60), 1):
             task = item['task']
             expected_solution = item['solution']
             

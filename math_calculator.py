@@ -74,7 +74,7 @@ class MathCalculator(dspy.Module):
             notes_output=context
         )
 
-    def evaluate_on_dataset(self, dataset_path="math_dataset.json", max_iter=None):
+    def evaluate_on_dataset(self, dataset_path="math_dataset.json", max_iter=None, num_threads=10):
         start_time = time.time()
         
         with open(dataset_path) as f:
@@ -92,24 +92,38 @@ class MathCalculator(dspy.Module):
             "time": 0
         }
         
-        # Evaluate all samples
-        for i, item in enumerate(tqdm.tqdm(dataset, ncols=60), 1):
+        # Function to evaluate single task
+        def evaluate_single(item):
             task = item['task']
             expected_solution = item['solution']
             
             # Evaluate with specified max iterations
             iter_start = time.time()
             result = self._forward_with_max_iter(task, max_iter=eval_iter)
-            results["time"] += time.time() - iter_start
+            elapsed = time.time() - iter_start
             
-            if self._is_correct(result.solution, expected_solution):
-                results["correct"] += 1
+            correct = self._is_correct(result.solution, expected_solution)
+            return correct, elapsed
+        
+        # Evaluate all samples in parallel
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = [
+                executor.submit(evaluate_single, item)
+                for item in dataset
+            ]
+            
+            for i, future in enumerate(tqdm.tqdm(as_completed(futures), total=len(futures), ncols=60), 1):
+                correct, elapsed = future.result()
+                results["correct"] += int(correct)
+                results["time"] += elapsed
                 
-            # Print progress
-            if i % 100 == 0:
-                print(f"\nProgress after {i} samples:")
-                print(f"Correct: {results['correct']}/{i} ({results['correct']/i:.1%})")
-                print(f"Time: {results['time']:.2f}s")
+                # Print progress
+                if i % 100 == 0:
+                    print(f"\nProgress after {i} samples:")
+                    print(f"Correct: {results['correct']}/{i} ({results['correct']/i:.1%})")
+                    print(f"Time: {results['time']:.2f}s")
                 
         # Calculate final metrics
         total_time = time.time() - start_time

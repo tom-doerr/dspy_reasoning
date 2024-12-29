@@ -71,7 +71,7 @@ class MathCalculator(dspy.Module):
         return dspy.Prediction(
             reasoning=final_reasoning,
             solution=final_solution,
-            notes_output=notes
+            notes_output=context
         )
 
     def evaluate_on_dataset(self, dataset_path="math_dataset.json"):

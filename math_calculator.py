@@ -90,7 +90,7 @@ class MathCalculator(dspy.Module):
         # Results storage
         results = {
             "max_iter_5": {"correct": 0, "time": 0},
-            "max_iter_1": {"correct": 0, "time"}
+            "max_iter_1": {"correct": 0, "time": 0}
         }
         
         # Evaluate both versions

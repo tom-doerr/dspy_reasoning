@@ -88,24 +88,30 @@ class MathOptimizer:
             # num_threads=10
             )
 
+        # Set student and teacher if not already set
+        if self.student is None:
+            self.set_student(base_model)
+        if self.teacher is None:
+            self.set_teacher(base_model)
+
         # Run optimization with required parameters
         if False:
-                optimized_calculator = teleprompter.compile(
-                    student=self.student if self.student else base_model,
-                    teacher=self.teacher if self.teacher else base_model,
-                    trainset=trainset,
-                    num_trials=7,  # Number of optimization trials
-                    max_bootstrapped_demos=3,  # Max bootstrapped examples
-                    max_labeled_demos=4,  # Max labeled examples
-                    requires_permission_to_run=False,
-                    minibatch=True,
-                )
+            optimized_calculator = teleprompter.compile(
+                student=self.student,
+                teacher=self.teacher,
+                trainset=trainset,
+                num_trials=7,  # Number of optimization trials
+                max_bootstrapped_demos=3,  # Max bootstrapped examples
+                max_labeled_demos=4,  # Max labeled examples
+                requires_permission_to_run=False,
+                minibatch=True,
+            )
         else:
-                optimized_calculator = teleprompter.compile(
-                    student=self.student if self.student else base_model,
-                    teacher=self.teacher if self.teacher else base_model,
-                    trainset=trainset[:100],
-                )
+            optimized_calculator = teleprompter.compile(
+                student=self.student,
+                teacher=self.teacher,
+                trainset=trainset[:100],
+            )
 
 
         return optimized_calculator
@@ -167,9 +173,12 @@ if __name__ == "__main__":
         current_calculator = current_calculator.deepcopy()
         current_calculator = current_calculator.reset_copy()
         
+        # Set student and teacher for this iteration
+        optimizer.set_student(current_calculator_student)
+        optimizer.set_teacher(current_calculator)
+        
         # Run optimization on current calculator
-        # optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator)
-        optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator, student=current_calculator_student, teacher=current_calculator)
+        optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator)
         
         # Evaluate optimized model on validation set
         accuracy = evaluate_model(optimized_calculator, val_data, num_threads=20)

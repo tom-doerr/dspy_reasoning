@@ -72,7 +72,7 @@ class MathOptimizer:
         # Run optimization with required parameters
         if False:
                 optimized_calculator = teleprompter.compile(
-                base_model if base_model else self.calculator,
+                base_model,
                 trainset=trainset,
                 num_trials=7,  # Number of optimization trials
                 max_bootstrapped_demos=3,  # Max bootstrapped examples
@@ -82,7 +82,7 @@ class MathOptimizer:
             )
         else:
                 optimized_calculator = teleprompter.compile(
-                base_model if base_model else self.calculator,
+                base_model,
                 trainset=trainset[:100],
             )
 
@@ -138,10 +138,11 @@ if __name__ == "__main__":
     print(f"Initial accuracy: {initial_accuracy:.1%}")
     
     # Run multiple optimization iterations with memory cleanup
-    num_iterations = 5
+    num_iterations = 10
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
-        current_calculator = current_calculator.deepcopy()
+        # current_calculator = current_calculator.deepcopy()
+        current_calculator = current_calculator.reset_copy()
         
         # Run optimization on current calculator
         optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator)

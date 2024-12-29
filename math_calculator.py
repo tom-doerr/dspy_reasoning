@@ -26,13 +26,13 @@ class MathCalculator(dspy.Module):
     def forward(self, task):
         """Forward pass for the math calculator with iterative reasoning"""
         max_iterations = 5
-        notes = ""
+        context = ""  # Accumulates all reasoning, solutions and notes
         final_reasoning = ""
         final_solution = ""
         
         for iteration in range(max_iterations):
             try:
-                result = self.calculate(task=task, context=notes)
+                result = self.calculate(task=task, context=context)
                 
                 # Validate required fields
                 if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
@@ -48,8 +48,14 @@ class MathCalculator(dspy.Module):
                 # Accumulate reasoning
                 final_reasoning += f"\nIteration {iteration + 1} Reasoning:\n{result.reasoning}"
                 
-                # Update notes for next iteration
-                notes = result.notes_output
+                # Build context for next iteration
+                iteration_context = (
+                    f"Iteration {iteration + 1}:\n"
+                    f"Reasoning: {result.reasoning}\n"
+                    f"Solution: {result.solution}\n"
+                    f"Notes: {result.notes_output}\n"
+                )
+                context += "\n" + iteration_context
                 
                 # Store the latest solution
                 final_solution = result.solution

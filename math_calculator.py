@@ -8,8 +8,11 @@ from tqdm import tqdm
 class MathCalculationSignature(dspy.Signature):
     """Solve math calculation tasks using chain-of-thought reasoning"""
     task = dspy.InputField(desc="The math calculation task to solve")
+    notes_input = dspy.InputField(desc="Notes from previous iterations", default="")
     reasoning = dspy.OutputField(desc="Step-by-step reasoning to solve the task")
     solution = dspy.OutputField(desc="The numerical solution to the task")
+    notes_output = dspy.OutputField(desc="Notes for next iteration", default="")
+    iteration_control = dspy.OutputField(desc="Should be 'continue' or 'terminate'", default="terminate")
 
 class MathCalculator(dspy.Module):
     def __init__(self):
@@ -17,11 +20,32 @@ class MathCalculator(dspy.Module):
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
 
     def forward(self, task):
-        """Forward pass for the math calculator"""
-        result = self.calculate(task=task)
+        """Forward pass for the math calculator with iterative reasoning"""
+        max_iterations = 5
+        notes = ""
+        final_reasoning = ""
+        final_solution = ""
+        
+        for iteration in range(max_iterations):
+            result = self.calculate(task=task, notes_input=notes)
+            
+            # Accumulate reasoning
+            final_reasoning += f"\nIteration {iteration + 1} Reasoning:\n{result.reasoning}"
+            
+            # Update notes for next iteration
+            notes = result.notes_output
+            
+            # Store the latest solution
+            final_solution = result.solution
+            
+            # Check if we should terminate
+            if result.iteration_control.lower() == "terminate":
+                break
+                
         return dspy.Prediction(
-            reasoning=result.reasoning,
-            solution=result.solution
+            reasoning=final_reasoning,
+            solution=final_solution,
+            notes_output=notes
         )
 
     def evaluate_on_dataset(self, dataset_path="math_dataset.json"):

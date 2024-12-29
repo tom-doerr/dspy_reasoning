@@ -66,7 +66,7 @@ class MathCalculator(dspy.Module):
             print(f"Task: {task}")
             print(f"Expected Solution: {expected_solution}")
             
-            result = self.calculate(task=task)
+            result = self.calculate(task=task, notes_input="")
             
             print(f"\nModel Reasoning:")
             print(result.reasoning)

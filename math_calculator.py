@@ -74,7 +74,7 @@ class MathCalculator(dspy.Module):
             notes_output=context
         )
 
-    def evaluate_on_dataset(self, dataset_path="math_dataset.json"):
+    def evaluate_on_dataset(self, dataset_path="math_dataset.json", max_iter=None):
         start_time = time.time()
         
         with open(dataset_path) as f:
@@ -83,49 +83,45 @@ class MathCalculator(dspy.Module):
         # Evaluate on first 1000 samples
         dataset = dataset[:1000]
         
-        # Create a copy with max_iter=1
-        single_iter_calculator = self.deepcopy()
-        single_iter_calculator.forward = lambda task: self._forward_with_max_iter(task, max_iter=1)
+        # Use provided max_iter or default to instance value
+        eval_iter = max_iter if max_iter is not None else self.max_iterations
         
         # Results storage
         results = {
-            "max_iter_5": {"correct": 0, "time": 0},
-            "max_iter_1": {"correct": 0, "time": 0}
+            "correct": 0,
+            "time": 0
         }
         
-        # Evaluate both versions
+        # Evaluate all samples
         for i, item in enumerate(tqdm.tqdm(dataset, ncols=60), 1):
             task = item['task']
             expected_solution = item['solution']
             
-            # Evaluate max_iter=5 version
-            iter5_start = time.time()
-            result5 = self.forward(task)
-            results["max_iter_5"]["time"] += time.time() - iter5_start
-            if self._is_correct(result5.solution, expected_solution):
-                results["max_iter_5"]["correct"] += 1
-                
-            # Evaluate max_iter=1 version
-            iter1_start = time.time()
-            result1 = single_iter_calculator.forward(task)
-            results["max_iter_1"]["time"] += time.time() - iter1_start
-            if self._is_correct(result1.solution, expected_solution):
-                results["max_iter_1"]["correct"] += 1
+            # Evaluate with specified max iterations
+            iter_start = time.time()
+            result = self._forward_with_max_iter(task, max_iter=eval_iter)
+            results["time"] += time.time() - iter_start
+            
+            if self._is_correct(result.solution, expected_solution):
+                results["correct"] += 1
                 
             # Print progress
             if i % 100 == 0:
                 print(f"\nProgress after {i} samples:")
-                self._print_results(results, i)
+                print(f"Correct: {results['correct']}/{i} ({results['correct']/i:.1%})")
+                print(f"Time: {results['time']:.2f}s")
                 
         # Calculate final metrics
         total_time = time.time() - start_time
-        results["max_iter_5"]["accuracy"] = results["max_iter_5"]["correct"] / len(dataset)
-        results["max_iter_1"]["accuracy"] = results["max_iter_1"]["correct"] / len(dataset)
+        results["accuracy"] = results["correct"] / len(dataset)
         results["total_time"] = total_time
+        results["max_iter"] = eval_iter
         
         # Print final results
-        print("\nFinal Results:")
-        self._print_results(results, len(dataset))
+        print("\nEvaluation Results:")
+        print(f"Max Iterations: {eval_iter}")
+        print(f"Correct Answers: {results['correct']}/{len(dataset)} ({results['accuracy']:.1%})")
+        print(f"Total Time: {results['total_time']:.2f}s")
         
         # Save results
         with open("math_calculator_benchmark.json", "w") as f:
@@ -185,14 +181,6 @@ class MathCalculator(dspy.Module):
             print(f"⚠️ Error evaluating solution: {str(e)}")
             return False
             
-    def _print_results(self, results, total):
-        """Print formatted results"""
-        print("\nMax Iterations Comparison:")
-        print(f"Max Iter=5: {results['max_iter_5']['correct']}/{total} ({results['max_iter_5']['correct']/total:.1%})")
-        print(f"Max Iter=1: {results['max_iter_1']['correct']}/{total} ({results['max_iter_1']['correct']/total:.1%})")
-        print(f"\nTime Comparison:")
-        print(f"Max Iter=5: {results['max_iter_5']['time']:.2f}s")
-        print(f"Max Iter=1: {results['max_iter_1']['time']:.2f}s")
 
 if __name__ == "__main__":
     # Configure DSPy

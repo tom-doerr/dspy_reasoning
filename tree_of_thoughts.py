@@ -139,7 +139,7 @@ class ForestOfThoughts:
             
             # Share insights between trees periodically
             if iteration > 0 and iteration % self.communication_interval == 0:
-                self._share_insights()
+                self._share_insights(expected)
             
             # Generate thoughts across all trees
             thoughts = self.generate_thoughts(task)
@@ -172,8 +172,12 @@ class ForestOfThoughts:
                 
         return best
         
-    def _share_insights(self) -> None:
-        """Share insights between trees"""
+    def _share_insights(self, expected: float) -> None:
+        """Share insights between trees
+        
+        Args:
+            expected: The expected solution value for correctness checking
+        """
         # Collect successful thoughts from all trees
         insights = []
         for tree in self.trees:

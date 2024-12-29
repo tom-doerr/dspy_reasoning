@@ -29,7 +29,12 @@ class MathCalculator(dspy.Module):
         
         for iteration in range(max_iterations):
             result = self.calculate(task=task, notes_input=notes)
-            pprint("result:", result)
+            print("Iteration result:")
+            print(f"Reasoning: {result.reasoning}")
+            print(f"Solution: {result.solution}")
+            print(f"Notes: {result.notes_output}")
+            print(f"Control: {result.iteration_control}")
+            print("-" * 40)
             
             # Accumulate reasoning
             final_reasoning += f"\nIteration {iteration + 1} Reasoning:\n{result.reasoning}"

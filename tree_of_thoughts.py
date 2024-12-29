@@ -16,16 +16,38 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class ReasoningTree:
-    def __init__(self, calculator: MathCalculator):
+    def __init__(self, calculator: MathCalculator, tree_id: int):
         self.calculator = calculator
         self.thoughts = []
         self.score = 0
+        self.tree_id = tree_id
+        self.expertise = {}  # Track success rates by problem type
+        self.shared_insights = []  # Insights from other trees
         
     def generate_thought(self, task: str) -> dspy.Prediction:
         """Generate a new thought using this tree's calculator"""
-        thought = self.calculator.forward(task)
+        # Incorporate shared insights from other trees
+        context = "\nShared Insights:\n" + "\n".join(self.shared_insights) if self.shared_insights else ""
+        
+        # Generate thought with context
+        thought = self.calculator.forward(task=task, context=context)
         self.thoughts.append(thought)
+        
+        # Update expertise based on problem type
+        problem_type = self._classify_problem(task)
+        self.expertise[problem_type] = self.expertise.get(problem_type, 0) + 1
+        
         return thought
+        
+    def _classify_problem(self, task: str) -> str:
+        """Classify problem type based on operators"""
+        if any(op in task for op in ['+', '-']):
+            return "arithmetic"
+        elif any(op in task for op in ['*', '/']):
+            return "algebraic"
+        elif any(op in task for op in ['^', '√']):
+            return "advanced"
+        return "unknown"
         
     def evaluate_thought(self, thought: dspy.Prediction, expected: float) -> float:
         """Evaluate a thought and update tree score"""
@@ -47,10 +69,12 @@ class ForestOfThoughts:
             num_thoughts: Number of thoughts to generate per tree
             max_iterations: Maximum iterations for solving each task
         """
-        self.trees = [ReasoningTree(MathCalculator()) for _ in range(num_trees)]
+        self.trees = [ReasoningTree(MathCalculator(), i) for i in range(num_trees)]
         self.num_thoughts = num_thoughts
         self.max_iterations = max_iterations
-        self.consensus_threshold = 0.7  # Percentage of trees that must agree
+        self.consensus_threshold = 0.7  # Initial consensus threshold
+        self.adaptive_threshold = True  # Enable adaptive thresholding
+        self.communication_interval = 2  # Share insights every N iterations
         logger.info(f"Initialized ForestOfThoughts with {num_trees} trees, {num_thoughts} thoughts per tree")
 
     def generate_thoughts(self, task: str) -> List[dspy.Prediction]:
@@ -113,11 +137,19 @@ class ForestOfThoughts:
         for iteration in range(self.max_iterations):
             logger.info(f"Iteration {iteration + 1}/{self.max_iterations}")
             
+            # Share insights between trees periodically
+            if iteration > 0 and iteration % self.communication_interval == 0:
+                self._share_insights()
+            
             # Generate thoughts across all trees
             thoughts = self.generate_thoughts(task)
             
             # Evaluate thoughts and update tree scores
             scored = self.evaluate_thoughts(thoughts, expected)
+            
+            # Update consensus threshold adaptively
+            if self.adaptive_threshold:
+                self._update_consensus_threshold(scored)
             
             # Find consensus solution
             consensus = self._find_consensus(scored)
@@ -139,6 +171,33 @@ class ForestOfThoughts:
                 break
                 
         return best
+        
+    def _share_insights(self) -> None:
+        """Share insights between trees"""
+        # Collect successful thoughts from all trees
+        insights = []
+        for tree in self.trees:
+            insights.extend([
+                thought.reasoning for thought in tree.thoughts
+                if self._is_correct(thought.solution, expected)
+            ])
+        
+        # Distribute insights to all trees
+        for tree in self.trees:
+            tree.shared_insights = insights[:]  # Copy insights
+            
+        logger.info(f"Shared {len(insights)} insights across trees")
+        
+    def _update_consensus_threshold(self, scored_thoughts: List[Tuple[dspy.Prediction, int]]) -> None:
+        """Adaptively update consensus threshold based on performance"""
+        correct_count = sum(score for _, score in scored_thoughts)
+        total = len(scored_thoughts)
+        
+        if total > 0:
+            accuracy = correct_count / total
+            # Increase threshold if accuracy is high, decrease if low
+            self.consensus_threshold = min(0.9, max(0.5, accuracy))
+            logger.info(f"Updated consensus threshold to {self.consensus_threshold:.2f}")
         
     def _find_consensus(self, scored_thoughts: List[Tuple[dspy.Prediction, int]]) -> Optional[dspy.Prediction]:
         """Find a consensus solution across trees.

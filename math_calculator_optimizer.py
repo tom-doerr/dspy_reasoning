@@ -110,7 +110,7 @@ if __name__ == "__main__":
     print(f"Initial accuracy: {initial_accuracy:.1%}")
     
     # Run multiple optimization iterations with memory cleanup
-    num_iterations = 20
+    num_iterations = 5
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
         

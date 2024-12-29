@@ -24,11 +24,20 @@ class ReasoningTree:
         self.expertise = {}  # Track success rates by problem type
         self.shared_insights = []  # Insights from other trees
         
-    def generate_thought(self, task: str) -> dspy.Prediction:
-        """Generate a new thought using this tree's calculator"""
-        # Incorporate shared insights from other trees
-        context = "\nShared Insights:\n" + "\n".join(self.shared_insights) if self.shared_insights else ""
+    def generate_thought(self, task: str, context: str = "") -> dspy.Prediction:
+        """Generate a new thought using this tree's calculator.
         
+        Args:
+            task: The math task to solve
+            context: Context for generating the thought
+            
+        Returns:
+            Generated thought as a Prediction object
+        """
+        # Incorporate shared insights from other trees
+        if self.shared_insights:
+            context += "\nShared Insights:\n" + "\n".join(self.shared_insights)
+            
         # Generate thought with context
         thought = self.calculator.forward(task=task, context=context)
         self.thoughts.append(thought)
@@ -77,32 +86,78 @@ class ForestOfThoughts:
         self.communication_interval = 2  # Share insights every N iterations
         logger.info(f"Initialized ForestOfThoughts with {num_trees} trees, {num_thoughts} thoughts per tree")
 
-    def generate_thoughts(self, task: str) -> List[dspy.Prediction]:
-        """Generate multiple thoughts using ToT approach.
+    def generate_thoughts(self, task: str, iteration: int, best_score: float) -> List[dspy.Prediction]:
+        """Generate thoughts dynamically based on current state.
         
         Args:
             task: The math task to solve
+            iteration: Current iteration number
+            best_score: Best score achieved so far
             
         Returns:
             List of predictions from all trees
         """
         thoughts = []
         with ThreadPoolExecutor() as executor:
-            # Generate multiple thoughts per tree
             futures = []
+            
             for tree in self.trees:
-                # Generate initial thought
-                futures.append(executor.submit(tree.generate_thought, task))
+                # Base context from shared insights
+                base_context = "\nShared Insights:\n" + "\n".join(tree.shared_insights) if tree.shared_insights else ""
                 
-                # Generate alternative thoughts by varying the context
-                for i in range(self.num_thoughts - 1):
-                    context = f"Alternative approach {i+1}: Try a different method"
-                    futures.append(executor.submit(tree.generate_thought, task, context))
+                # Generate initial thought with current state context
+                context = (
+                    f"Iteration: {iteration}\n"
+                    f"Best Score: {best_score}\n"
+                    f"{base_context}\n"
+                    "Initial Approach: Solve the problem directly"
+                )
+                futures.append(executor.submit(tree.generate_thought, task, context))
+                
+                # Generate alternative thoughts based on iteration and progress
+                if iteration > 0:
+                    # If we have some progress, try refining approaches
+                    if best_score > 0:
+                        context = (
+                            f"Iteration: {iteration}\n"
+                            f"Best Score: {best_score}\n"
+                            f"{base_context}\n"
+                            "Approach: Refine the best solution found so far"
+                        )
+                        futures.append(executor.submit(tree.generate_thought, task, context))
+                        
+                        context = (
+                            f"Iteration: {iteration}\n"
+                            f"Best Score: {best_score}\n"
+                            f"{base_context}\n"
+                            "Approach: Combine elements from previous solutions"
+                        )
+                        futures.append(executor.submit(tree.generate_thought, task, context))
+                    
+                    # If we're stuck, try more creative approaches
+                    if best_score == 0 and iteration > self.max_iterations // 2:
+                        context = (
+                            f"Iteration: {iteration}\n"
+                            f"Best Score: {best_score}\n"
+                            f"{base_context}\n"
+                            "Approach: Try an unconventional method"
+                        )
+                        futures.append(executor.submit(tree.generate_thought, task, context))
+                        
+                        context = (
+                            f"Iteration: {iteration}\n"
+                            f"Best Score: {best_score}\n"
+                            f"{base_context}\n"
+                            "Approach: Break the problem into smaller parts"
+                        )
+                        futures.append(executor.submit(tree.generate_thought, task, context))
             
             # Collect results
             for future in futures:
                 try:
-                    thoughts.append(future.result())
+                    thought = future.result()
+                    if thought:  # Only add valid thoughts
+                        thoughts.append(thought)
                 except Exception as e:
                     logger.warning(f"Error generating thought: {e}")
                     
@@ -182,8 +237,8 @@ class ForestOfThoughts:
         for iteration in range(self.max_iterations):
             logger.info(f"Iteration {iteration + 1}/{self.max_iterations}")
             
-            # Generate thoughts using ToT approach
-            thoughts = self.generate_thoughts(task)
+            # Generate thoughts dynamically based on current state
+            thoughts = self.generate_thoughts(task, iteration, best_score)
             
             # Evaluate thoughts using multiple criteria
             scored = self.evaluate_thoughts(thoughts, expected)

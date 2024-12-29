@@ -9,7 +9,7 @@ from pprint import pprint
 class MathCalculationSignature(dspy.Signature):
     """Solve math calculation tasks using chain-of-thought reasoning"""
     task = dspy.InputField(desc="The math calculation task to solve")
-    notes_input = dspy.InputField(desc="Notes from previous iterations", default="")
+    context = dspy.InputField(desc="Context from previous iterations", default="")
     reasoning = dspy.OutputField(desc="Step-by-step reasoning to solve the task")
     solution = dspy.OutputField(desc="The numerical solution to the task. Must be a number.")
     notes_output = dspy.OutputField(desc="Notes for next iteration", default="")
@@ -32,7 +32,7 @@ class MathCalculator(dspy.Module):
         
         for iteration in range(max_iterations):
             try:
-                result = self.calculate(task=task, notes_input=notes)
+                result = self.calculate(task=task, context=notes)
                 
                 # Validate required fields
                 if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
@@ -87,7 +87,7 @@ class MathCalculator(dspy.Module):
             print(f"Expected Solution: {expected_solution}")
             
             if False:
-                result = self.calculate(task=task, notes_input="")
+                result = self.calculate(task=task, context="")
             else:
                 result = self.forward(task)
 

@@ -80,57 +80,119 @@ class MathCalculator(dspy.Module):
         with open(dataset_path) as f:
             dataset = json.load(f)
         
-        correct = 0
-        total = len(dataset)
-        dataset = dataset[:100]  # Evaluate on a subset of the dataset
+        # Evaluate on first 1000 samples
+        dataset = dataset[:1000]
         
+        # Create a copy with max_iter=1
+        single_iter_calculator = self.deepcopy()
+        single_iter_calculator.forward = lambda task: self._forward_with_max_iter(task, max_iter=1)
+        
+        # Results storage
+        results = {
+            "max_iter_5": {"correct": 0, "time": 0},
+            "max_iter_1": {"correct": 0, "time"}
+        }
+        
+        # Evaluate both versions
         for i, item in enumerate(tqdm.tqdm(dataset, ncols=60), 1):
             task = item['task']
             expected_solution = item['solution']
             
-            print(f"\n--- Evaluating Task {i}/{len(dataset)} ---")
-            print(f"Task: {task}")
-            print(f"Expected Solution: {expected_solution}")
-            
-            result = self.forward(task)
-
-            
-            print(f"\nModel Reasoning:")
-            print(result.reasoning)
-            print(f"\nModel Solution: {result.solution}")
-            
-            try:
-                # Compare solutions with some tolerance for floating point
-                if abs(float(result.solution) - float(expected_solution)) < 0.01:
-                    correct += 1
-                    print("✅ Correct")
-                else:
-                    print("❌ Incorrect")
-            except Exception as e:
-                print(f"⚠️ Error evaluating solution: {str(e)}")
-                continue
-            
-            print(f"Current Accuracy: {correct}/{i} ({correct/i:.1%})")
+            # Evaluate max_iter=5 version
+            iter5_start = time.time()
+            result5 = self.forward(task)
+            results["max_iter_5"]["time"] += time.time() - iter5_start
+            if self._is_correct(result5.solution, expected_solution):
+                results["max_iter_5"]["correct"] += 1
                 
-        pipeline_metrics = {
-            "total_tasks": len(dataset),  # Use actual number of evaluated tasks
-            "correct_answers": correct,
-            "accuracy": correct / len(dataset),
-            "time_seconds": time.time() - start_time
-        }
+            # Evaluate max_iter=1 version
+            iter1_start = time.time()
+            result1 = single_iter_calculator.forward(task)
+            results["max_iter_1"]["time"] += time.time() - iter1_start
+            if self._is_correct(result1.solution, expected_solution):
+                results["max_iter_1"]["correct"] += 1
+                
+            # Print progress
+            if i % 100 == 0:
+                print(f"\nProgress after {i} samples:")
+                self._print_results(results, i)
+                
+        # Calculate final metrics
+        total_time = time.time() - start_time
+        results["max_iter_5"]["accuracy"] = results["max_iter_5"]["correct"] / len(dataset)
+        results["max_iter_1"]["accuracy"] = results["max_iter_1"]["correct"] / len(dataset)
+        results["total_time"] = total_time
         
-        print(f"\nMath Calculator Evaluation Results:")
-        print(f"Total Tasks: {pipeline_metrics['total_tasks']}")
-        print(f"Correct Answers: {pipeline_metrics['correct_answers']}")
-        print(f"Accuracy: {pipeline_metrics['accuracy']:.1%}")
-        print(f"Time: {pipeline_metrics['time_seconds']:.2f} seconds")
+        # Print final results
+        print("\nFinal Results:")
+        self._print_results(results, len(dataset))
         
         # Save results
         with open("math_calculator_benchmark.json", "w") as f:
-            json.dump(pipeline_metrics, f, indent=2)
+            json.dump(results, f, indent=2)
             
         print("\nBenchmark results saved to math_calculator_benchmark.json")
-        return pipeline_metrics
+        return results
+        
+    def _forward_with_max_iter(self, task, max_iter):
+        """Modified forward pass with configurable max iterations"""
+        context = ""
+        final_reasoning = ""
+        final_solution = ""
+        
+        for iteration in range(max_iter):
+            try:
+                result = self.calculate(task=task, context=context)
+                
+                # Validate required fields
+                if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
+                    raise ValueError("Missing required fields in model output")
+                    
+                # Accumulate reasoning
+                final_reasoning += f"\nIteration {iteration + 1} Reasoning:\n{result.reasoning}"
+                
+                # Build context for next iteration
+                iteration_context = (
+                    f"Iteration {iteration + 1}:\n"
+                    f"Reasoning: {result.reasoning}\n"
+                    f"Solution: {result.solution}\n"
+                    f"Notes: {result.notes_output}\n"
+                )
+                context += "\n" + iteration_context
+                
+                # Store the latest solution
+                final_solution = result.solution
+                
+                # Check if we should terminate
+                if result.iteration_control.lower().strip() == "terminate":
+                    break
+                    
+            except Exception as e:
+                print(f"Error in iteration {iteration + 1}: {str(e)}")
+                continue
+                
+        return dspy.Prediction(
+            reasoning=final_reasoning,
+            solution=final_solution,
+            notes_output=context
+        )
+        
+    def _is_correct(self, predicted, expected):
+        """Compare solutions with tolerance for floating point"""
+        try:
+            return abs(float(predicted) - float(expected)) < 0.01
+        except Exception as e:
+            print(f"⚠️ Error evaluating solution: {str(e)}")
+            return False
+            
+    def _print_results(self, results, total):
+        """Print formatted results"""
+        print("\nMax Iterations Comparison:")
+        print(f"Max Iter=5: {results['max_iter_5']['correct']}/{total} ({results['max_iter_5']['correct']/total:.1%})")
+        print(f"Max Iter=1: {results['max_iter_1']['correct']}/{total} ({results['max_iter_1']['correct']/total:.1%})")
+        print(f"\nTime Comparison:")
+        print(f"Max Iter=5: {results['max_iter_5']['time']:.2f}s")
+        print(f"Max Iter=1: {results['max_iter_1']['time']:.2f}s")
 
 if __name__ == "__main__":
     # Configure DSPy

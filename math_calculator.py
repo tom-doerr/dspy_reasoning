@@ -13,7 +13,7 @@ class MathCalculationSignature(dspy.Signature):
     reasoning = dspy.OutputField(desc="Step-by-step reasoning to solve the task")
     solution = dspy.OutputField(desc="The numerical solution to the task")
     notes_output = dspy.OutputField(desc="Notes for next iteration", default="")
-    iteration_control = dspy.OutputField(desc="Should be 'continue' or 'terminate'", default="terminate")
+    iteration_control = dspy.OutputField(desc="Should be 'continue' or 'terminate', reply continue if you are not sure if the solution is correct", default="continue")
 
 class MathCalculator(dspy.Module):
     def __init__(self):
@@ -73,7 +73,11 @@ class MathCalculator(dspy.Module):
             print(f"Task: {task}")
             print(f"Expected Solution: {expected_solution}")
             
-            result = self.calculate(task=task, notes_input="")
+            if False:
+                result = self.calculate(task=task, notes_input="")
+            else:
+                result = self.forward(task)
+
             
             print(f"\nModel Reasoning:")
             print(result.reasoning)

@@ -2,7 +2,7 @@
 
 import dspy
 import json
-from dspy.teleprompt import MIPROv2, BootstrapFewShotWithRandomSearch
+from dspy.teleprompt import MIPROv2, BootstrapFewShotWithRandomSearch, BootstrapFewShot
 from math_calculator import MathCalculator, MathCalculationSignature
 import tqdm
 
@@ -59,7 +59,7 @@ class MathOptimizer:
                 auto='light',
                 track_stats=False,  # Disable stats tracking to save memory
             )
-        else:
+        if False:
             teleprompter = BootstrapFewShotWithRandomSearch(
             metric=metric,
             max_bootstrapped_demos=4,
@@ -68,6 +68,15 @@ class MathOptimizer:
             num_candidate_programs=1,
             num_threads=100
         )
+        if True:
+            teleprompter = BootstrapFewShot(
+            metric=metric,
+            max_bootstrapped_demos=4,
+            max_labeled_demos=8,
+            # num_candidate_programs=10,
+            # num_candidate_programs=1,
+            # num_threads=10
+            )
 
         # Run optimization with required parameters
         if False:
@@ -136,16 +145,19 @@ if __name__ == "__main__":
     initial_accuracy = evaluate_model(current_calculator, val_data, num_threads=20)
     results.append(("Initial", initial_accuracy))
     print(f"Initial accuracy: {initial_accuracy:.1%}")
+
+    current_calculator_student = current_calculator.deepcopy()
     
     # Run multiple optimization iterations with memory cleanup
     num_iterations = 10
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
-        # current_calculator = current_calculator.deepcopy()
+        current_calculator = current_calculator.deepcopy()
         current_calculator = current_calculator.reset_copy()
         
         # Run optimization on current calculator
-        optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator)
+        # optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator)
+        optimized_calculator = optimizer.optimize(trainset, num_candidates=3, base_model=current_calculator, student=current_calculator_student, teacher=current_calculator)
         
         # Evaluate optimized model on validation set
         accuracy = evaluate_model(optimized_calculator, val_data, num_threads=20)

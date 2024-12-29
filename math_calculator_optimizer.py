@@ -67,7 +67,7 @@ class MathOptimizer:
 
         return optimized_calculator
 
-    def save_optimized_model(self, optimized_calculator, path="optimized_math_calculator.json"):
+    def save_optimized_model(self, optimized_calculator, path="optimized_models/optimized_math_calculator.json"):
         optimized_calculator.save(path)
         print(f"Optimized model saved to {path}")
 
@@ -128,8 +128,10 @@ if __name__ == "__main__":
         results.append((f"Iteration {i+1}", accuracy))
         print(f"Optimization iteration {i+1} accuracy: {accuracy:.1%}")
         
-        # Save optimized model
-        model_path = f"optimized_math_calculator_iter{i+1}.json"
+        # Save optimized model to optimized_models directory
+        import os
+        os.makedirs("optimized_models", exist_ok=True)
+        model_path = f"optimized_models/optimized_math_calculator_iter{i+1}.json"
         optimizer.save_optimized_model(optimized_calculator, model_path)
         
         # Set as current calculator for next iteration

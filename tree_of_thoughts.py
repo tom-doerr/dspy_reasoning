@@ -57,11 +57,18 @@ class ForestOfThoughts:
         start = time.time()
         
         with ThreadPoolExecutor(num_threads) as executor:
-            futures = [executor.submit(self.solve, item['task'], item['solution'])
-                      for item in dataset[:100]]
+            # Create list of tasks with their corresponding items
+            tasks = [(item['task'], item['solution']) for item in dataset[:100]]
+        
+            # Submit tasks and keep track of which item they correspond to
+            futures = {executor.submit(self.solve, task, solution): (task, solution) 
+                      for task, solution in tasks}
+        
             for future in futures:
                 result = future.result()
-                correct += int(abs(float(result.solution) - float(item['solution'])) < 0.01)
+                # Get the solution from the original task
+                _, expected_solution = futures[future]
+                correct += int(abs(float(result.solution) - float(expected_solution)) < 0.01)
         
         accuracy = correct / len(dataset[:100])
         elapsed = time.time() - start

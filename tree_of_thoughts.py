@@ -61,7 +61,7 @@ class ForestOfThoughts:
                       for item in dataset[:100]]
             for future in futures:
                 result = future.result()
-                correct += int(abs(float(result.solution) - float(expected)) < 0.01)
+                correct += int(abs(float(result.solution) - float(item['solution'])) < 0.01)
         
         accuracy = correct / len(dataset[:100])
         elapsed = time.time() - start

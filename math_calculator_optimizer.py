@@ -37,8 +37,14 @@ class MathOptimizer:
         # Define the metric function
         def metric(example, prediction, trace=None):
             try:
-                return int(abs(float(prediction.solution) - float(example.solution)) < 0.01)
-            except:
+                # Handle both string and numeric solutions
+                pred_solution = float(prediction.solution) if isinstance(prediction.solution, str) else prediction.solution
+                exp_solution = float(example.solution) if isinstance(example.solution, str) else example.solution
+                
+                # Compare with tolerance for floating point numbers
+                return int(abs(pred_solution - exp_solution) < 0.01)
+            except (ValueError, TypeError, AttributeError) as e:
+                print(f"Metric error: {e}")
                 return 0
 
         # Configure MIPRO optimizer with reduced memory footprint
@@ -76,8 +82,14 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 def evaluate_single_task(calculator, item):
     try:
         result = calculator(task=item['task'])
-        return int(abs(float(result.solution) - float(item['solution'])) < 0.01)
-    except:
+        # Handle both string and numeric solutions
+        pred_solution = float(result.solution) if isinstance(result.solution, str) else result.solution
+        exp_solution = float(item['solution']) if isinstance(item['solution'], str) else item['solution']
+        
+        # Compare with tolerance for floating point numbers
+        return int(abs(pred_solution - exp_solution) < 0.01)
+    except (ValueError, TypeError, AttributeError) as e:
+        print(f"Evaluation error for task {item['task']}: {e}")
         return 0
 
 def evaluate_model(calculator, dataset, num_threads=4):

@@ -45,6 +45,12 @@ class ProblemSolver(dspy.Module):
             }
         }
         self.current_node_id = 0
+        
+        # Initialize DSPy modules
+        self.calculate = dspy.ChainOfThought(MathCalculationSignature)
+        self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
+        self.split_task = dspy.ChainOfThought(TaskSplitterSignature)
+        self.select_subtask_result = dspy.ChainOfThought(SubtaskResultSelectorSignature)
 
     def _create_node(self, task, parent_id=None, node_type='task', input_data=None, output_data=None):
         """Create a new node in the reasoning tree with input/output tracking"""
@@ -72,10 +78,6 @@ class ProblemSolver(dspy.Module):
             self.reasoning_tree['root'] = node_id
             
         return node_id
-        self.calculate = dspy.ChainOfThought(MathCalculationSignature)
-        self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
-        self.split_task = dspy.ChainOfThought(TaskSplitterSignature)
-        self.select_subtask_result = dspy.ChainOfThought(SubtaskResultSelectorSignature)
 
     def _split_task(self, task, depth=0, max_depth=3):
         """Split a general problem into subtasks using DSPy reasoning"""

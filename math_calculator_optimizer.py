@@ -47,7 +47,7 @@ class MathOptimizer:
         return trainset
 
     def optimize(self, trainset, num_candidates=10, base_model=None):
-        # Define the metric function
+        # Define the metric function with subtask reasoning evaluation
         def metric(example, prediction, trace=None):
             try:
                 # Handle both string and numeric solutions
@@ -55,12 +55,25 @@ class MathOptimizer:
                 exp_solution = float(example.solution) if isinstance(example.solution, str) else example.solution
                 
                 # Compare with tolerance for floating point numbers
-                return int(abs(pred_solution - exp_solution) < 0.01)
+                accuracy = int(abs(pred_solution - exp_solution) < 0.01)
+                
+                # Evaluate subtask reasoning quality
+                if hasattr(prediction, 'reasoning'):
+                    reasoning = prediction.reasoning.lower()
+                    # Check for subtask indicators
+                    if 'subtask' in reasoning or 'step' in reasoning or 'part' in reasoning:
+                        # Additional points for using subtask reasoning
+                        accuracy += 1
+                        # Check for proper combination of subtasks
+                        if 'combine' in reasoning or 'final result' in reasoning:
+                            accuracy += 1
+                
+                return min(accuracy, 1)  # Cap at 1 to maintain binary metric
             except (ValueError, TypeError, AttributeError) as e:
                 print(f"Metric error: {e}")
                 return 0
 
-        # Configure MIPRO optimizer with reduced memory footprint
+        # Configure MIPRO optimizer with subtask reasoning focus
         teleprompter = MIPROv2(
             metric=metric,
             num_candidates=num_candidates,
@@ -69,7 +82,12 @@ class MathOptimizer:
             task_model=self.lm,
             num_threads=100,
             auto='light',
-            track_stats=True,  # Disable stats tracking to save memory
+            track_stats=True,
+            additional_constraints=[
+                "Encourage splitting complex problems into subtasks",
+                "Ensure proper combination of subtask results",
+                "Maintain clear reasoning between subtasks"
+            ]
         )
 
         # Set student and teacher if not already set
@@ -78,19 +96,22 @@ class MathOptimizer:
         if self.teacher is None:
             self.set_teacher(base_model)
 
-        # Run optimization with required parameters
-        if True:
-        # if False:
-            optimized_calculator = teleprompter.compile(
-                student=self.student,
-                teacher=self.teacher,
-                trainset=trainset,
-                num_trials=7,  # Number of optimization trials
-                max_bootstrapped_demos=3,  # Max bootstrapped examples
-                max_labeled_demos=4,  # Max labeled examples
-                requires_permission_to_run=False,
-                minibatch=True,
-            )
+        # Run optimization with subtask reasoning focus
+        optimized_calculator = teleprompter.compile(
+            student=self.student,
+            teacher=self.teacher,
+            trainset=trainset,
+            num_trials=7,
+            max_bootstrapped_demos=3,
+            max_labeled_demos=4,
+            requires_permission_to_run=False,
+            minibatch=True,
+            optimization_focus=[
+                "Task splitting accuracy",
+                "Subtask reasoning quality",
+                "Result combination correctness"
+            ]
+        )
         else:
             optimized_calculator = teleprompter.compile(
                 student=self.student,

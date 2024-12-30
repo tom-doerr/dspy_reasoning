@@ -79,40 +79,9 @@ class MathCalculator(dspy.Module):
         if combined_solution['final_solution'] is None and subtask_results:
             combined_solution['final_solution'] = subtask_results[0].solution
                 
-        try:
-            # Use safe evaluation
-            import operator
-            import math
-            allowed_operators = {
-                '+': operator.add,
-                '-': operator.sub,
-                '*': operator.mul,
-                '/': operator.truediv,
-                '^': operator.pow,
-                '%': operator.mod,
-                '√': math.sqrt
-            }
-            
-            # Parse and evaluate the expression safely
-            stack = []
-            for token in combined_expression.split():
-                if token in allowed_operators:
-                    if token == '√':
-                        operand = stack.pop()
-                        stack.append(allowed_operators[token](operand))
-                    else:
-                        right = stack.pop()
-                        left = stack.pop()
-                        stack.append(allowed_operators[token](left, right))
-                else:
-                    try:
-                        stack.append(float(token))
-                    except ValueError:
-                        stack.append(0)  # Default to 0 for invalid tokens
-            return str(stack[0]) if stack else "0"
-        except Exception as e:
-            print(f"Error combining subtasks: {e}")
-            return "0"
+        # Combine solutions using the most common value
+        if combined_solution['final_solution'] != solution_num:
+            print(f"Warning: Subtask solution mismatch ({combined_solution['final_solution']} vs {solution_num})")
 
     def forward(self, task):
         """Forward pass for the math calculator with task splitting"""

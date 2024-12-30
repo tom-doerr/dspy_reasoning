@@ -35,17 +35,8 @@ class MathCalculator(dspy.Module):
         self.num_attempts = num_attempts
         self.subtask_attempts = subtask_attempts
 
-    def _is_complex_task(self, task):
-        """Determine if a task is complex enough to be split further"""
-        # Count the number of operations in the task
-        operators = ['+', '-', '*', '/', '^', '√', '%']
-        operator_count = sum(1 for char in task if char in operators)
-        
-        # Consider a task complex if it has more than 2 operations
-        return operator_count > 2
-
     def _split_task(self, task, depth=0, max_depth=3):
-        """Recursively split a complex task into subtasks using DSPy reasoning"""
+        """Split a task into subtasks using DSPy reasoning"""
         if depth >= max_depth:
             return [task]  # Stop recursion at max depth
             
@@ -70,10 +61,8 @@ class MathCalculator(dspy.Module):
             # Recursively split subtasks if needed
             final_subtasks = []
             for subtask in subtasks:
-                if self._is_complex_task(subtask):  # Check if subtask can be split further
-                    final_subtasks.extend(self._split_task(subtask, depth+1, max_depth))
-                else:
-                    final_subtasks.append(subtask)
+                # Let DSPy decide if subtask should be split further
+                final_subtasks.extend(self._split_task(subtask, depth+1, max_depth))
                     
             return final_subtasks if final_subtasks else [task]
         except Exception as e:
@@ -82,41 +71,20 @@ class MathCalculator(dspy.Module):
 
     def _combine_subtask_results(self, subtask_results: List[dspy.Prediction]) -> Dict[str, Any]:
         """Combine results from DSPy-generated subtasks"""
-        # Build a structured solution combining all subtask results
-        combined_solution = {
-            'subtasks': [],
-            'final_solution': None
-        }
+        # Let DSPy handle combining the results
+        combined_reasoning = "\n".join(
+            f"Subtask {i+1}:\n{r.reasoning}\nSolution: {r.solution}\n" 
+            for i, r in enumerate(subtask_results)
+        )
         
-        # Process each subtask result
-        for result in subtask_results:
-            subtask_info = {
-                'reasoning': result.reasoning,
-                'solution': result.solution,
-                'notes': result.notes_output
-            }
-            combined_solution['subtasks'].append(subtask_info)
-            
-            # Try to extract a numerical solution if available
-            try:
-                solution_num = float(result.solution)
-                if combined_solution['final_solution'] is None:
-                    combined_solution['final_solution'] = solution_num
-                else:
-                    # Combine solutions using the most common value
-                    if combined_solution['final_solution'] != solution_num:
-                        print(f"Warning: Subtask solution mismatch ({combined_solution['final_solution']} vs {solution_num})")
-            except (ValueError, TypeError):
-                continue
-                
-        # If no numerical solution found, use the first subtask's solution
-        if combined_solution['final_solution'] is None and subtask_results:
-            combined_solution['final_solution'] = subtask_results[0].solution
-                
-        # Combine solutions using the most common value
-        if combined_solution['final_solution'] is not None:
-            print(f"Final combined solution: {combined_solution['final_solution']}")
-            return combined_solution['final_solution']
+        # Use the last subtask's solution as the final solution
+        final_solution = subtask_results[-1].solution if subtask_results else None
+        
+        return dspy.Prediction(
+            reasoning=f"Combined subtask results:\n{combined_reasoning}",
+            solution=final_solution,
+            notes_output="Combined results from subtasks"
+        )
 
     def forward(self, task):
         """Forward pass for the math calculator with recursive task splitting"""

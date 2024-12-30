@@ -17,6 +17,21 @@ from signatures import (
 )
 from math_evaluator import MathEvaluator
 
+class MathCalculator(dspy.Module):
+    """Base math calculator module that ProblemSolver extends"""
+    def __init__(self):
+        super().__init__()
+        self.calculate = dspy.ChainOfThought(MathCalculationSignature)
+
+    def forward(self, task):
+        """Basic forward pass without advanced reasoning"""
+        result = self.calculate(task=task)
+        return dspy.Prediction(
+            reasoning=result.reasoning,
+            solution=result.solution,
+            notes_output=result.notes_output
+        )
+
 class ProblemSolver(dspy.Module):
     def __init__(self, max_iterations=5, num_attempts=3, subtask_attempts=3):
         """Initialize the ProblemSolver with DSPy modules and configuration.

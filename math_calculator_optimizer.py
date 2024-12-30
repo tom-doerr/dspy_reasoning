@@ -61,16 +61,16 @@ class MathOptimizer:
                 return 0
 
         # Configure MIPRO optimizer with reduced memory footprint
-            teleprompter = MIPROv2(
-                metric=metric,
-                num_candidates=num_candidates,
-                init_temperature=1.0,
-                prompt_model=self.lm,
-                task_model=self.lm,
-                num_threads=100,
-                auto='light',
-                track_stats=True,  # Disable stats tracking to save memory
-            )
+        teleprompter = MIPROv2(
+            metric=metric,
+            num_candidates=num_candidates,
+            init_temperature=1.0,
+            prompt_model=self.lm,
+            task_model=self.lm,
+            num_threads=100,
+            auto='light',
+            track_stats=True,  # Disable stats tracking to save memory
+        )
 
         # Set student and teacher if not already set
         if self.student is None:

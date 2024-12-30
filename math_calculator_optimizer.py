@@ -82,12 +82,7 @@ class MathOptimizer:
             task_model=self.lm,
             num_threads=100,
             auto='light',
-            track_stats=True,
-            additional_constraints=[
-                "Encourage splitting complex problems into subtasks",
-                "Ensure proper combination of subtask results",
-                "Maintain clear reasoning between subtasks"
-            ]
+            track_stats=True
         )
 
         # Set student and teacher if not already set
@@ -106,11 +101,6 @@ class MathOptimizer:
             max_labeled_demos=4,
             requires_permission_to_run=False,
             minibatch=True,
-            optimization_focus=[
-                "Task splitting accuracy", 
-                "Subtask reasoning quality",
-                "Result combination correctness"
-            ]
         )
 
 

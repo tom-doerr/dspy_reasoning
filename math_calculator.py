@@ -38,7 +38,7 @@ class MathCalculator(dspy.Module):
     def _split_task(self, task):
         """Split a complex task into subtasks using DSPy reasoning"""
         try:
-            result = self.split_task(task=task)
+            result = self.split_task(task=task, context="")
             if not hasattr(result, 'subtasks'):
                 return [task]  # Fallback if splitting fails
                 
@@ -188,7 +188,9 @@ class MathCalculator(dspy.Module):
         selection_result = self.select_solution(
             task=task,
             solutions=[f"Attempt {i+1}:\nReasoning: {a['reasoning']}\nSolution: {a['solution']}" 
-                      for i, a in enumerate(attempts)]
+                      for i, a in enumerate(attempts)],
+            selection_criteria="Select the solution that is mathematically correct, logically consistent, "
+                             "has clear reasoning, and provides a complete solution to the task"
         )
         
         # Find the selected solution

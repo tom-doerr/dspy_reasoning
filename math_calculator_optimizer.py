@@ -167,7 +167,7 @@ if __name__ == "__main__":
     current_calculator_student = current_calculator.deepcopy()
     
     # Run multiple optimization iterations with memory cleanup
-    num_iterations = 10
+    num_iterations = 1
     for i in range(num_iterations):
         print(f"\nStarting optimization iteration {i+1}/{num_iterations}...")
         current_calculator = current_calculator.deepcopy()

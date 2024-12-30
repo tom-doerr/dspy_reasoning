@@ -370,27 +370,24 @@ if __name__ == "__main__":
     lm = dspy.LM(model="deepseek/deepseek-chat", temperature=0.3, cache=False)
     dspy.settings.configure(lm=lm)
     
-    # Create calculator instances
-    calculator_iter1 = MathCalculator(max_iterations=1)
-    calculator_iter5 = MathCalculator(max_iterations=5)
+    # Create calculator instance with subtask processing
+    calculator = MathCalculator(max_iterations=3, num_attempts=2, subtask_attempts=2)
     
-    # Evaluate both configurations
-    print("\nEvaluating with max_iter=1...")
-    results_iter1 = calculator_iter1.evaluate_on_dataset(num_threads=100)
+    # Test complex task that should be split into subtasks
+    complex_task = "Calculate (3 + 4) * (5 - 2) / (6 + 3)"
     
-    print("\nEvaluating with max_iter=5...")
-    results_iter5 = calculator_iter5.evaluate_on_dataset(num_threads=100)
+    print(f"\nProcessing complex task: {complex_task}")
+    result = calculator.forward(complex_task)
     
-    # Print comparison
-    print("\nComparison Results:")
-    print(f"Max Iter=1: Accuracy={results_iter1['accuracy']:.1%}, Time={results_iter1['total_time']:.2f}s")
-    print(f"Max Iter=5: Accuracy={results_iter5['accuracy']:.1%}, Time={results_iter5['total_time']:.2f}s")
+    print("\nFinal Result:")
+    print(f"Reasoning:\n{result.reasoning}")
+    print(f"Solution: {result.solution}")
     
-    # Save comparison results
-    comparison = {
-        "max_iter_1": results_iter1,
-        "max_iter_5": results_iter5
-    }
-    with open("math_calculator_comparison.json", "w") as f:
-        json.dump(comparison, f, indent=2)
-    print("\nComparison results saved to math_calculator_comparison.json")
+    # Save result
+    with open("subtask_result.json", "w") as f:
+        json.dump({
+            "task": complex_task,
+            "reasoning": result.reasoning,
+            "solution": result.solution
+        }, f, indent=2)
+    print("\nResult saved to subtask_result.json")

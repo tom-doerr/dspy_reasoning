@@ -18,19 +18,114 @@ class MathCalculator(dspy.Module):
         self.max_iterations = max_iterations
         self.num_attempts = num_attempts
 
-    def forward(self, task):
-        """Forward pass for the math calculator with multiple attempts and selection"""
-        attempts = []
+    def _split_task(self, task):
+        """Split a complex task into subtasks"""
+        # Split on operators while preserving them
+        operators = ['+', '-', '*', '/', '^', '√', '%']
+        subtasks = []
+        current_task = ""
         
-        # Run multiple attempts
-        for attempt in range(self.num_attempts):
-            context = ""
-            final_reasoning = ""
-            final_solution = ""
+        for char in task:
+            if char in operators:
+                if current_task:
+                    subtasks.append(current_task.strip())
+                subtasks.append(char)
+                current_task = ""
+            else:
+                current_task += char
+                
+        if current_task:
+            subtasks.append(current_task.strip())
             
-            for iteration in range(self.max_iterations):
-                try:
-                    result = self.calculate(task=task, context=context)
+        return subtasks
+
+    def _combine_subtask_results(self, subtask_results):
+        """Combine results from subtasks into a final solution"""
+        # Build and evaluate the combined expression
+        combined_expression = ""
+        for result in subtask_results:
+            if result.solution in ['+', '-', '*', '/', '^', '√', '%']:
+                combined_expression += f" {result.solution} "
+            else:
+                combined_expression += f" {result.solution} "
+                
+        try:
+            # Use safe evaluation
+            import operator
+            import math
+            allowed_operators = {
+                '+': operator.add,
+                '-': operator.sub,
+                '*': operator.mul,
+                '/': operator.truediv,
+                '^': operator.pow,
+                '%': operator.mod,
+                '√': math.sqrt
+            }
+            
+            # Parse and evaluate the expression safely
+            stack = []
+            for token in combined_expression.split():
+                if token in allowed_operators:
+                    if token == '√':
+                        operand = stack.pop()
+                        stack.append(allowed_operators[token](operand))
+                    else:
+                        right = stack.pop()
+                        left = stack.pop()
+                        stack.append(allowed_operators[token](left, right))
+                else:
+                    try:
+                        stack.append(float(token))
+                    except ValueError:
+                        stack.append(0)  # Default to 0 for invalid tokens
+            return str(stack[0]) if stack else "0"
+        except Exception as e:
+            print(f"Error combining subtasks: {e}")
+            return "0"
+
+    def forward(self, task):
+        """Forward pass for the math calculator with task splitting"""
+        # First try to split the task into subtasks
+        subtasks = self._split_task(task)
+        
+        if len(subtasks) > 1:
+            # Process each subtask independently
+            subtask_results = []
+            for subtask in subtasks:
+                if subtask in ['+', '-', '*', '/', '^', '√', '%']:
+                    # Keep operators as-is
+                    subtask_results.append(dspy.Prediction(
+                        reasoning="Operator",
+                        solution=subtask,
+                        notes_output=""
+                    ))
+                else:
+                    # Process numerical subtasks
+                    result = self._forward_with_max_iter(subtask, self.max_iterations)
+                    subtask_results.append(result)
+            
+            # Combine subtask results
+            final_solution = self._combine_subtask_results(subtask_results)
+            final_reasoning = "\n".join(
+                f"Subtask {i+1} ({subtask}):\n{r.reasoning}\nSolution: {r.solution}\n" 
+                for i, (subtask, r) in enumerate(zip(subtasks, subtask_results))
+            )
+            
+            return dspy.Prediction(
+                reasoning=f"Task split into {len(subtasks)} subtasks:\n{final_reasoning}",
+                solution=final_solution,
+                notes_output="Task split into subtasks"
+            )
+        else:
+            # Fall back to original processing if no subtasks found
+            attempts = []
+            
+            # Run multiple attempts
+            for attempt in range(self.num_attempts):
+                context = ""
+                final_reasoning = ""
+                final_solution = ""
                     
                     # Validate required fields
                     if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):

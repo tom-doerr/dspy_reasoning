@@ -263,13 +263,45 @@ class ProblemSolver(dspy.Module):
         evaluator = MathEvaluator(self, num_threads)
         return evaluator.evaluate_on_dataset(dataset_path)
         
-    def _process_subtask(self, subtask):
+    def _process_subtask(self, subtask, parent_id=None):
         """Process a subtask with multiple attempts and select the best result"""
+        # Create node for this subtask
+        subtask_node_id = self._create_node(
+            task=subtask,
+            parent_id=parent_id,
+            node_type='subtask',
+            input_data={
+                'subtask': subtask,
+                'parent_id': parent_id,
+                'timestamp': time.time()
+            }
+        )
+        
         attempts = []
         
         for attempt in range(self.subtask_attempts):
+            # Create node for this attempt
+            attempt_node_id = self._create_node(
+                task=subtask,
+                parent_id=subtask_node_id,
+                node_type='attempt',
+                input_data={
+                    'attempt_number': attempt + 1,
+                    'subtask': subtask,
+                    'timestamp': time.time()
+                }
+            )
             try:
                 result = self._forward_with_max_iter(subtask, self.max_iterations)
+                
+                # Update attempt node with output
+                self.reasoning_tree['nodes'][attempt_node_id]['output'] = {
+                    'reasoning': result.reasoning,
+                    'solution': result.solution,
+                    'notes': result.notes_output,
+                    'timestamp': time.time()
+                }
+                
                 attempts.append({
                     'reasoning': result.reasoning,
                     'solution': result.solution,
@@ -362,10 +394,21 @@ class ProblemSolver(dspy.Module):
         )
         
     def save_reasoning_tree(self, path="reasoning_tree.json"):
-        """Save the full reasoning tree to a JSON file"""
+        """Save the full reasoning tree to a JSON file with enhanced details"""
+        # Add final metadata
+        self.reasoning_tree['metadata']['end_time'] = time.time()
+        self.reasoning_tree['metadata']['duration'] = (
+            self.reasoning_tree['metadata']['end_time'] - 
+            self.reasoning_tree['metadata']['start_time']
+        )
+        
+        # Save with pretty printing
         with open(path, "w") as f:
-            json.dump(self.reasoning_tree, f, indent=2)
+            json.dump(self.reasoning_tree, f, indent=2, sort_keys=True)
+            
         print(f"Reasoning tree saved to {path}")
+        print(f"Total nodes: {len(self.reasoning_tree['nodes'])}")
+        print(f"Duration: {self.reasoning_tree['metadata']['duration']:.2f}s")
 
     def _is_correct(self, predicted, expected):
         """Compare solutions with tolerance for floating point"""

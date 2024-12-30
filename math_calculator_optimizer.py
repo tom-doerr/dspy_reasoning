@@ -107,17 +107,11 @@ class MathOptimizer:
             requires_permission_to_run=False,
             minibatch=True,
             optimization_focus=[
-                "Task splitting accuracy",
+                "Task splitting accuracy", 
                 "Subtask reasoning quality",
                 "Result combination correctness"
             ]
         )
-        else:
-            optimized_calculator = teleprompter.compile(
-                student=self.student,
-                teacher=self.teacher,
-                trainset=trainset[:100],
-            )
 
 
         return optimized_calculator

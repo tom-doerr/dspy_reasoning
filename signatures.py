@@ -7,6 +7,13 @@ class TaskSplitterSignature(dspy.Signature):
     subtasks = dspy.OutputField(desc="List of logical subtasks to solve independently")
     split_reasoning = dspy.OutputField(desc="Explanation of why the task was split this way")
 
+class SubtaskResultSelectorSignature(dspy.Signature):
+    """Select the best result from multiple attempts at solving a subtask"""
+    subtask = dspy.InputField(desc="The subtask being solved")
+    attempts = dspy.InputField(desc="List of attempts with their reasoning and solutions")
+    selected_solution = dspy.OutputField(desc="The best solution based on mathematical correctness and reasoning quality")
+    selection_reasoning = dspy.OutputField(desc="Explanation of why this solution was selected")
+
 class SolutionSelectorSignature(dspy.Signature):
     """Select the best solution from multiple attempts"""
     task = dspy.InputField(desc="The original task being solved")

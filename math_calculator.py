@@ -11,13 +11,15 @@ from signatures import SolutionSelectorSignature, MathCalculationSignature
 from math_evaluator import MathEvaluator
 
 class MathCalculator(dspy.Module):
-    def __init__(self, max_iterations=5, num_attempts=3):
+    def __init__(self, max_iterations=5, num_attempts=3, subtask_attempts=3):
         super().__init__()
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
         self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
         self.split_task = dspy.ChainOfThought(TaskSplitterSignature)
+        self.select_subtask_result = dspy.ChainOfThought(SubtaskResultSelectorSignature)
         self.max_iterations = max_iterations
         self.num_attempts = num_attempts
+        self.subtask_attempts = subtask_attempts
 
     def _split_task(self, task):
         """Split a complex task into subtasks using DSPy reasoning"""
@@ -118,7 +120,7 @@ class MathCalculator(dspy.Module):
         subtasks = self._split_task(task)
         
         if len(subtasks) > 1:
-            # Process each subtask independently
+            # Process each subtask independently with multiple attempts
             subtask_results = []
             for subtask in subtasks:
                 if subtask in ['+', '-', '*', '/', '^', '√', '%']:
@@ -129,8 +131,8 @@ class MathCalculator(dspy.Module):
                         notes_output=""
                     ))
                 else:
-                    # Process numerical subtasks
-                    result = self._forward_with_max_iter(subtask, self.max_iterations)
+                    # Process numerical subtasks with multiple attempts
+                    result = self._process_subtask(subtask)
                     subtask_results.append(result)
             
             # Combine subtask results
@@ -252,6 +254,55 @@ class MathCalculator(dspy.Module):
         evaluator = MathEvaluator(self, num_threads)
         return evaluator.evaluate_on_dataset(dataset_path)
         
+    def _process_subtask(self, subtask):
+        """Process a subtask with multiple attempts and select the best result"""
+        attempts = []
+        
+        for attempt in range(self.subtask_attempts):
+            try:
+                result = self._forward_with_max_iter(subtask, self.max_iterations)
+                attempts.append({
+                    'reasoning': result.reasoning,
+                    'solution': result.solution,
+                    'notes': result.notes_output
+                })
+            except Exception as e:
+                print(f"Error in subtask attempt {attempt + 1}: {e}")
+                continue
+                
+        # Select the best result using DSPy
+        if len(attempts) > 1:
+            selection_result = self.select_subtask_result(
+                subtask=subtask,
+                attempts=[f"Attempt {i+1}:\nReasoning: {a['reasoning']}\nSolution: {a['solution']}" 
+                         for i, a in enumerate(attempts)]
+            )
+            
+            # Find the selected solution
+            for attempt in attempts:
+                if attempt['solution'] == selection_result.selected_solution:
+                    return dspy.Prediction(
+                        reasoning=f"Selected Solution Reasoning:\n{selection_result.selection_reasoning}\n\n"
+                                f"Solution Details:\n{attempt['reasoning']}",
+                        solution=attempt['solution'],
+                        notes_output=attempt['notes']
+                    )
+                    
+        # If no selection or only one attempt, return the first result
+        if attempts:
+            return dspy.Prediction(
+                reasoning=attempts[0]['reasoning'],
+                solution=attempts[0]['solution'],
+                notes_output=attempts[0]['notes']
+            )
+            
+        # Fallback if all attempts failed
+        return dspy.Prediction(
+            reasoning="All attempts failed to solve the subtask",
+            solution="0",
+            notes_output=""
+        )
+
     def _forward_with_max_iter(self, task, max_iter):
         """Modified forward pass with configurable max iterations"""
         context = ""

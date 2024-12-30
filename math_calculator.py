@@ -8,7 +8,13 @@ import tqdm
 from pprint import pprint
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from signatures import SolutionSelectorSignature, MathCalculationSignature
+from typing import List, Dict, Any
+from signatures import (
+    SolutionSelectorSignature, 
+    MathCalculationSignature,
+    TaskSplitterSignature,
+    SubtaskResultSelectorSignature
+)
 from math_evaluator import MathEvaluator
 
 class MathCalculator(dspy.Module):

@@ -5,34 +5,9 @@ import json
 import time
 import tqdm
 from pprint import pprint
-
-class SolutionSelectorSignature(dspy.Signature):
-    """Select the best solution from multiple attempts"""
-    task = dspy.InputField(desc="The original task being solved")
-    solutions = dspy.InputField(desc="List of potential solutions with their reasoning")
-    selection_criteria = dspy.InputField(
-        desc="Criteria for selecting the best solution: "
-             "1. Mathematical correctness, "
-             "2. Logical consistency, "
-             "3. Clarity of reasoning, "
-             "4. Completeness of solution",
-        default="Select the solution that is mathematically correct, logically consistent, "
-                "has clear reasoning, and provides a complete solution to the task"
-    )
-    selected_solution = dspy.OutputField(desc="The best solution based on the selection criteria")
-    selection_reasoning = dspy.OutputField(desc="Detailed reasoning for why this solution was selected")
-
-class MathCalculationSignature(dspy.Signature):
-    """Solve math calculation tasks using chain-of-thought reasoning"""
-    task = dspy.InputField(desc="The math calculation task to solve")
-    context = dspy.InputField(desc="Context from previous iterations", default="")
-    reasoning = dspy.OutputField(desc="Step-by-step reasoning to solve the task")
-    solution = dspy.OutputField(desc="The numerical solution to the task. Must be a number.")
-    notes_output = dspy.OutputField(desc="Notes for next iteration", default="")
-    iteration_control = dspy.OutputField(
-        desc="Must be either 'continue' or 'terminate'. Use 'terminate' only when absolutely certain the solution is correct.",
-        default="continue"
-    )
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from signatures import SolutionSelectorSignature, MathCalculationSignature
 
 class MathCalculator(dspy.Module):
     def __init__(self, max_iterations=5, num_attempts=3):
@@ -147,74 +122,8 @@ class MathCalculator(dspy.Module):
         )
 
     def evaluate_on_dataset(self, dataset_path="math_dataset.json", max_iter=None, num_threads=10):
-        start_time = time.time()
-        
-        with open(dataset_path) as f:
-            dataset = json.load(f)
-        
-        # Evaluate on first 1000 samples
-        dataset = dataset[:100]
-        
-        # Use provided max_iter or default to instance value
-        eval_iter = max_iter if max_iter is not None else self.max_iterations
-        
-        # Results storage
-        results = {
-            "correct": 0,
-            "time": 0
-        }
-        
-        # Function to evaluate single task
-        def evaluate_single(item):
-            task = item['task']
-            expected_solution = item['solution']
-            
-            # Evaluate with specified max iterations
-            iter_start = time.time()
-            result = self._forward_with_max_iter(task, max_iter=eval_iter)
-            elapsed = time.time() - iter_start
-            
-            correct = self._is_correct(result.solution, expected_solution)
-            return correct, elapsed
-        
-        # Evaluate all samples in parallel
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        
-        with ThreadPoolExecutor(max_workers=num_threads) as executor:
-            futures = [
-                executor.submit(evaluate_single, item)
-                for item in dataset
-            ]
-            
-            for i, future in enumerate(tqdm.tqdm(as_completed(futures), total=len(futures), ncols=60), 1):
-                correct, elapsed = future.result()
-                results["correct"] += int(correct)
-                results["time"] += elapsed
-                
-                # Print progress
-                if i % 100 == 0:
-                    print(f"\nProgress after {i} samples:")
-                    print(f"Correct: {results['correct']}/{i} ({results['correct']/i:.1%})")
-                    print(f"Time: {results['time']:.2f}s")
-                
-        # Calculate final metrics
-        total_time = time.time() - start_time
-        results["accuracy"] = results["correct"] / len(dataset)
-        results["total_time"] = total_time
-        results["max_iter"] = eval_iter
-        
-        # Print final results
-        print("\nEvaluation Results:")
-        print(f"Max Iterations: {eval_iter}")
-        print(f"Correct Answers: {results['correct']}/{len(dataset)} ({results['accuracy']:.1%})")
-        print(f"Total Time: {results['total_time']:.2f}s")
-        
-        # Save results
-        with open("math_calculator_benchmark.json", "w") as f:
-            json.dump(results, f, indent=2)
-            
-        print("\nBenchmark results saved to math_calculator_benchmark.json")
-        return results
+        evaluator = MathEvaluator(self, num_threads)
+        return evaluator.evaluate_on_dataset(dataset_path)
         
     def _forward_with_max_iter(self, task, max_iter):
         """Modified forward pass with configurable max iterations"""

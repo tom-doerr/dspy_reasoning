@@ -6,6 +6,22 @@ import time
 import tqdm
 from pprint import pprint
 
+class SolutionSelectorSignature(dspy.Signature):
+    """Select the best solution from multiple attempts"""
+    task = dspy.InputField(desc="The original task being solved")
+    solutions = dspy.InputField(desc="List of potential solutions with their reasoning")
+    selection_criteria = dspy.InputField(
+        desc="Criteria for selecting the best solution: "
+             "1. Mathematical correctness, "
+             "2. Logical consistency, "
+             "3. Clarity of reasoning, "
+             "4. Completeness of solution",
+        default="Select the solution that is mathematically correct, logically consistent, "
+                "has clear reasoning, and provides a complete solution to the task"
+    )
+    selected_solution = dspy.OutputField(desc="The best solution based on the selection criteria")
+    selection_reasoning = dspy.OutputField(desc="Detailed reasoning for why this solution was selected")
+
 class MathCalculationSignature(dspy.Signature):
     """Solve math calculation tasks using chain-of-thought reasoning"""
     task = dspy.InputField(desc="The math calculation task to solve")
@@ -19,59 +35,115 @@ class MathCalculationSignature(dspy.Signature):
     )
 
 class MathCalculator(dspy.Module):
-    def __init__(self, max_iterations=5):
+    def __init__(self, max_iterations=5, num_attempts=3):
         super().__init__()
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
+        self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
         self.max_iterations = max_iterations
+        self.num_attempts = num_attempts
 
     def forward(self, task):
-        """Forward pass for the math calculator with iterative reasoning"""
-        context = ""  # Accumulates all reasoning, solutions and notes
-        final_reasoning = ""
-        final_solution = ""
+        """Forward pass for the math calculator with multiple attempts and selection"""
+        attempts = []
         
-        for iteration in range(self.max_iterations):
-            try:
-                result = self.calculate(task=task, context=context)
-                
-                # Validate required fields
-                if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
-                    raise ValueError("Missing required fields in model output")
+        # Run multiple attempts
+        for attempt in range(self.num_attempts):
+            context = ""
+            final_reasoning = ""
+            final_solution = ""
+            
+            for iteration in range(self.max_iterations):
+                try:
+                    result = self.calculate(task=task, context=context)
                     
-                print("Iteration result:")
-                print(f"Reasoning: {result.reasoning}")
-                print(f"Solution: {result.solution}")
-                print(f"Notes: {result.notes_output}")
-                print(f"Control: {result.iteration_control}")
-                print("-" * 40)
-                
-                # Accumulate reasoning
-                final_reasoning += f"\nIteration {iteration + 1} Reasoning:\n{result.reasoning}"
-                
-                # Build context for next iteration
-                iteration_context = (
-                    f"Iteration {iteration + 1}:\n"
-                    f"Reasoning: {result.reasoning}\n"
-                    f"Solution: {result.solution}\n"
-                    f"Notes: {result.notes_output}\n"
+                    # Validate required fields
+                    if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
+                        raise ValueError("Missing required fields in model output")
+                        
+                    # Accumulate reasoning
+                    final_reasoning += f"\nAttempt {attempt + 1}, Iteration {iteration + 1} Reasoning:\n{result.reasoning}"
+                    
+                    # Build context for next iteration
+                    iteration_context = (
+                        f"Iteration {iteration + 1}:\n"
+                        f"Reasoning: {result.reasoning}\n"
+                        f"Solution: {result.solution}\n"
+                        f"Notes: {result.notes_output}\n"
+                    )
+                    context += "\n" + iteration_context
+                    
+                    # Store the latest solution
+                    final_solution = result.solution
+                    
+                    # Check if we should terminate
+                    if result.iteration_control.lower().strip() == "terminate":
+                        break
+                        
+                except Exception as e:
+                    print(f"Error in attempt {attempt + 1}, iteration {iteration + 1}: {str(e)}")
+                    continue
+                    
+            attempts.append({
+                'reasoning': final_reasoning,
+                'solution': final_solution,
+                'notes_output': context
+            })
+        
+        # Select the best solution
+        selection_result = self.select_solution(
+            task=task,
+            solutions=[f"Attempt {i+1}:\nReasoning: {a['reasoning']}\nSolution: {a['solution']}" 
+                      for i, a in enumerate(attempts)]
+        )
+        
+        # Find the selected solution
+        selected_solution = selection_result.selected_solution
+        selection_reasoning = selection_result.selection_reasoning
+        
+        # Try to match the selected solution
+        for attempt in attempts:
+            if attempt['solution'] == selected_solution:
+                # Add selection reasoning to the final output
+                final_reasoning = (
+                    f"Selected Solution Reasoning:\n{selection_reasoning}\n\n"
+                    f"Solution Details:\n{attempt['reasoning']}"
                 )
-                context += "\n" + iteration_context
+                return dspy.Prediction(
+                    reasoning=final_reasoning,
+                    solution=attempt['solution'],
+                    notes_output=attempt['notes_output']
+                )
                 
-                # Store the latest solution
-                final_solution = result.solution
-                
-                # Check if we should terminate
-                if result.iteration_control.lower().strip() == "terminate":
-                    break
+        # If no solution was selected, choose the most consistent one
+        if len(attempts) > 1:
+            # Find the most common solution
+            from collections import Counter
+            solution_counts = Counter(a['solution'] for a in attempts)
+            most_common_solution = solution_counts.most_common(1)[0][0]
+            
+            # Return the first attempt with the most common solution
+            for attempt in attempts:
+                if attempt['solution'] == most_common_solution:
+                    final_reasoning = (
+                        "No clear selection - using most consistent solution:\n"
+                        f"Solution appeared {solution_counts[most_common_solution]} times\n\n"
+                        f"Solution Details:\n{attempt['reasoning']}"
+                    )
+                    return dspy.Prediction(
+                        reasoning=final_reasoning,
+                        solution=attempt['solution'],
+                        notes_output=attempt['notes_output']
+                    )
                     
-            except Exception as e:
-                print(f"Error in iteration {iteration + 1}: {str(e)}")
-                continue
-                
+        # Fall back to the first attempt
+        final_reasoning = (
+            "Using first attempt as fallback solution\n\n"
+            f"Solution Details:\n{attempts[0]['reasoning']}"
+        )
         return dspy.Prediction(
             reasoning=final_reasoning,
-            solution=final_solution,
-            notes_output=context
+            solution=attempts[0]['solution'],
+            notes_output=attempts[0]['notes_output']
         )
 
     def evaluate_on_dataset(self, dataset_path="math_dataset.json", max_iter=None, num_threads=10):

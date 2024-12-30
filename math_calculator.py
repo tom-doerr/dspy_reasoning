@@ -131,33 +131,33 @@ class MathCalculator(dspy.Module):
         
         # Run multiple attempts
         for attempt in range(self.num_attempts):
-                context = ""
-                final_reasoning = ""
-                final_solution = ""
-                
-                for iteration in range(self.max_iterations):
-                    try:
-                        result = self.calculate(task=task, context=context)
-                        
-                        # Validate required fields
-                        if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
-                            raise ValueError("Missing required fields in model output")
-                            
-                        # Accumulate reasoning
-                        final_reasoning += f"\nAttempt {attempt + 1}, Iteration {iteration + 1} Reasoning:\n{result.reasoning}"
-                        
-                        # Build context for next iteration
-                        iteration_context = (
-                            f"Iteration {iteration + 1}:\n"
-                            f"Reasoning: {result.reasoning}\n"
-                            f"Solution: {result.solution}\n"
-                            f"Notes: {result.notes_output}\n"
-                        )
-                        context += "\n" + iteration_context
-                        
-                        # Store the latest solution
-                        final_solution = result.solution
+            context = ""
+            final_reasoning = ""
+            final_solution = ""
+            
+            for iteration in range(self.max_iterations):
+                try:
+                    result = self.calculate(task=task, context=context)
                     
+                    # Validate required fields
+                    if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
+                        raise ValueError("Missing required fields in model output")
+                        
+                    # Accumulate reasoning
+                    final_reasoning += f"\nAttempt {attempt + 1}, Iteration {iteration + 1} Reasoning:\n{result.reasoning}"
+                    
+                    # Build context for next iteration
+                    iteration_context = (
+                        f"Iteration {iteration + 1}:\n"
+                        f"Reasoning: {result.reasoning}\n"
+                        f"Solution: {result.solution}\n"
+                        f"Notes: {result.notes_output}\n"
+                    )
+                    context += "\n" + iteration_context
+                    
+                    # Store the latest solution
+                    final_solution = result.solution
+                
                     # Check if we should terminate
                     if result.iteration_control.lower().strip() == "terminate":
                         break

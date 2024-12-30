@@ -174,9 +174,9 @@ class MathCalculator(dspy.Module):
                             f"Notes: {result.notes_output}\n"
                         )
                         context += "\n" + iteration_context
-                    
-                    # Store the latest solution
-                    final_solution = result.solution
+                        
+                        # Store the latest solution
+                        final_solution = result.solution
                     
                     # Check if we should terminate
                     if result.iteration_control.lower().strip() == "terminate":

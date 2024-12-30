@@ -126,12 +126,16 @@ class MathCalculator(dspy.Module):
                 context = ""
                 final_reasoning = ""
                 final_solution = ""
-                    
-                    # Validate required fields
-                    if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
-                        raise ValueError("Missing required fields in model output")
+                
+                for iteration in range(self.max_iterations):
+                    try:
+                        result = self.calculate(task=task, context=context)
                         
-                    # Accumulate reasoning
+                        # Validate required fields
+                        if not all(hasattr(result, field) for field in ['reasoning', 'solution', 'notes_output', 'iteration_control']):
+                            raise ValueError("Missing required fields in model output")
+                            
+                        # Accumulate reasoning
                     final_reasoning += f"\nAttempt {attempt + 1}, Iteration {iteration + 1} Reasoning:\n{result.reasoning}"
                     
                     # Build context for next iteration

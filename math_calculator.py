@@ -136,9 +136,9 @@ class MathCalculator(dspy.Module):
                             raise ValueError("Missing required fields in model output")
                             
                         # Accumulate reasoning
-                    final_reasoning += f"\nAttempt {attempt + 1}, Iteration {iteration + 1} Reasoning:\n{result.reasoning}"
-                    
-                    # Build context for next iteration
+                        final_reasoning += f"\nAttempt {attempt + 1}, Iteration {iteration + 1} Reasoning:\n{result.reasoning}"
+                        
+                        # Build context for next iteration
                     iteration_context = (
                         f"Iteration {iteration + 1}:\n"
                         f"Reasoning: {result.reasoning}\n"

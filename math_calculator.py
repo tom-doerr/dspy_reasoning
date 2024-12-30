@@ -125,7 +125,7 @@ class MathCalculator(dspy.Module):
             )
             
         # Fall back to original processing if no subtasks found
-            attempts = []
+        attempts = []
             
             # Run multiple attempts
             for attempt in range(self.num_attempts):

@@ -385,7 +385,7 @@ if __name__ == "__main__":
     dspy.settings.configure(lm=lm)
     
     # Create calculator instance with subtask processing
-    calculator = MathCalculator(max_iterations=3, num_attempts=2, subtask_attempts=2)
+    calculator = ProblemSolver(max_iterations=3, num_attempts=2, subtask_attempts=2)
     
     # Test complex task that should be split into subtasks
     complex_task = "Calculate (3 + 4) * (5 - 2) / (6 + 3)"

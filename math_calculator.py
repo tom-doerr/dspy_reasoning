@@ -27,6 +27,11 @@ class ProblemSolver(dspy.Module):
             subtask_attempts: Number of attempts to solve each subtask
         """
         super().__init__()
+        self.reasoning_tree = {
+            'root': None,
+            'nodes': {}
+        }
+        self.current_node_id = 0
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
         self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
         self.split_task = dspy.ChainOfThought(TaskSplitterSignature)
@@ -356,6 +361,12 @@ class ProblemSolver(dspy.Module):
             notes_output=context
         )
         
+    def save_reasoning_tree(self, path="reasoning_tree.json"):
+        """Save the full reasoning tree to a JSON file"""
+        with open(path, "w") as f:
+            json.dump(self.reasoning_tree, f, indent=2)
+        print(f"Reasoning tree saved to {path}")
+
     def _is_correct(self, predicted, expected):
         """Compare solutions with tolerance for floating point"""
         try:

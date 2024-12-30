@@ -5,6 +5,9 @@ import json
 from dspy.teleprompt import MIPROv2, BootstrapFewShotWithRandomSearch, BootstrapFewShot
 from math_calculator import MathCalculator, MathCalculationSignature
 import tqdm
+import logging
+
+logging.basicConfig(filename='optimization_log.txt', level=logging.INFO)
 
 # Set global tqdm configuration
 tqdm.tqdm.pandas()
@@ -58,17 +61,19 @@ class MathOptimizer:
                 return 0
 
         # Configure MIPRO optimizer with reduced memory footprint
-        if False:
+        # if False:
+        if True:
             teleprompter = MIPROv2(
                 metric=metric,
                 num_candidates=num_candidates,
                 init_temperature=1.0,
                 prompt_model=self.lm,
                 task_model=self.lm,
-                num_threads=4,  # Reduced from 10 to 4
+                num_threads=100,
                 auto='light',
-                track_stats=False,  # Disable stats tracking to save memory
+                track_stats=True,  # Disable stats tracking to save memory
             )
+        # if True:
         if False:
             teleprompter = BootstrapFewShotWithRandomSearch(
             metric=metric,
@@ -78,7 +83,8 @@ class MathOptimizer:
             num_candidate_programs=1,
             num_threads=100
         )
-        if True:
+        # if True:
+        if False:
             teleprompter = BootstrapFewShot(
             metric=metric,
             max_bootstrapped_demos=4,
@@ -95,7 +101,8 @@ class MathOptimizer:
             self.set_teacher(base_model)
 
         # Run optimization with required parameters
-        if False:
+        if True:
+        # if False:
             optimized_calculator = teleprompter.compile(
                 student=self.student,
                 teacher=self.teacher,

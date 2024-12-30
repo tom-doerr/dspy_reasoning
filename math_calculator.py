@@ -12,6 +12,13 @@ from math_evaluator import MathEvaluator
 
 class MathCalculator(dspy.Module):
     def __init__(self, max_iterations=5, num_attempts=3, subtask_attempts=3):
+        """Initialize the MathCalculator with DSPy modules and configuration.
+        
+        Args:
+            max_iterations: Maximum number of reasoning iterations per attempt
+            num_attempts: Number of attempts to solve each task
+            subtask_attempts: Number of attempts to solve each subtask
+        """
         super().__init__()
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
         self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
@@ -46,7 +53,7 @@ class MathCalculator(dspy.Module):
             print(f"Error splitting task: {e}")
             return [task]  # Fallback to original task if splitting fails
 
-    def _combine_subtask_results(self, subtask_results):
+    def _combine_subtask_results(self, subtask_results: List[dspy.Prediction]) -> Dict[str, Any]:
         """Combine results from DSPy-generated subtasks"""
         # Build a structured solution combining all subtask results
         combined_solution = {
@@ -80,9 +87,8 @@ class MathCalculator(dspy.Module):
             combined_solution['final_solution'] = subtask_results[0].solution
                 
         # Combine solutions using the most common value
-        if combined_solution['final_solution'] is not None and solution_num is not None:
-            if combined_solution['final_solution'] != solution_num:
-                print(f"Warning: Subtask solution mismatch ({combined_solution['final_solution']} vs {solution_num})")
+        if combined_solution['final_solution'] is not None:
+            print(f"Final combined solution: {combined_solution['final_solution']}")
 
     def forward(self, task):
         """Forward pass for the math calculator with task splitting"""
@@ -117,8 +123,8 @@ class MathCalculator(dspy.Module):
                 solution=final_solution,
                 notes_output="Task split into subtasks"
             )
-        else:
-            # Fall back to original processing if no subtasks found
+            
+        # Fall back to original processing if no subtasks found
             attempts = []
             
             # Run multiple attempts
@@ -154,8 +160,14 @@ class MathCalculator(dspy.Module):
                     if result.iteration_control.lower().strip() == "terminate":
                         break
                         
+                except ValueError as e:
+                    print(f"Validation error in attempt {attempt + 1}, iteration {iteration + 1}: {str(e)}")
+                    continue
+                except RuntimeError as e:
+                    print(f"Runtime error in attempt {attempt + 1}, iteration {iteration + 1}: {str(e)}")
+                    continue
                 except Exception as e:
-                    print(f"Error in attempt {attempt + 1}, iteration {iteration + 1}: {str(e)}")
+                    print(f"Unexpected error in attempt {attempt + 1}, iteration {iteration + 1}: {str(e)}")
                     continue
                     
             attempts.append({

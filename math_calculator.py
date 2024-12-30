@@ -80,8 +80,9 @@ class MathCalculator(dspy.Module):
             combined_solution['final_solution'] = subtask_results[0].solution
                 
         # Combine solutions using the most common value
-        if combined_solution['final_solution'] != solution_num:
-            print(f"Warning: Subtask solution mismatch ({combined_solution['final_solution']} vs {solution_num})")
+        if combined_solution['final_solution'] is not None and solution_num is not None:
+            if combined_solution['final_solution'] != solution_num:
+                print(f"Warning: Subtask solution mismatch ({combined_solution['final_solution']} vs {solution_num})")
 
     def forward(self, task):
         """Forward pass for the math calculator with task splitting"""

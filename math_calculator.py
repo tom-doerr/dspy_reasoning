@@ -17,9 +17,9 @@ from signatures import (
 )
 from math_evaluator import MathEvaluator
 
-class MathCalculator(dspy.Module):
+class ProblemSolver(dspy.Module):
     def __init__(self, max_iterations=5, num_attempts=3, subtask_attempts=3):
-        """Initialize the MathCalculator with DSPy modules and configuration.
+        """Initialize the ProblemSolver with DSPy modules and configuration.
         
         Args:
             max_iterations: Maximum number of reasoning iterations per attempt
@@ -36,7 +36,7 @@ class MathCalculator(dspy.Module):
         self.subtask_attempts = subtask_attempts
 
     def _split_task(self, task, depth=0, max_depth=3):
-        """Split a task into subtasks using DSPy reasoning"""
+        """Split a general problem into subtasks using DSPy reasoning"""
         if depth >= max_depth:
             print(f"Max recursion depth {max_depth} reached for task: {task}")
             return [task]
@@ -65,7 +65,11 @@ class MathCalculator(dspy.Module):
             final_subtasks = []
             for subtask in subtasks:
                 try:
-                    final_subtasks.extend(self._split_task(subtask, depth+1, max_depth))
+                    # Only split further if the subtask is complex enough
+                    if len(subtask.split()) > 5:  # Simple heuristic based on length
+                        final_subtasks.extend(self._split_task(subtask, depth+1, max_depth))
+                    else:
+                        final_subtasks.append(subtask)
                 except Exception as e:
                     print(f"Error recursively splitting subtask {subtask}: {e}")
                     final_subtasks.append(subtask)
@@ -86,17 +90,23 @@ class MathCalculator(dspy.Module):
             
         # Build combined reasoning
         combined_reasoning = []
+        combined_solution = []
+        
         for i, result in enumerate(subtask_results, 1):
             combined_reasoning.append(
                 f"Subtask {i}:\n"
                 f"Reasoning: {result.reasoning}\n"
                 f"Solution: {result.solution}\n"
             )
+            if result.solution:
+                combined_solution.append(str(result.solution))
+                
+        # Combine solutions in a meaningful way
+        final_solution = "\n".join(combined_solution) if combined_solution else "No solution found"
             
-        # Let DSPy handle combining the results
         return dspy.Prediction(
             reasoning="Combined subtask results:\n" + "\n".join(combined_reasoning),
-            solution=subtask_results[-1].solution,
+            solution=final_solution,
             notes_output="Combined results from subtasks"
         )
 

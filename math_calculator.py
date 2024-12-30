@@ -8,6 +8,7 @@ from pprint import pprint
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from signatures import SolutionSelectorSignature, MathCalculationSignature
+from math_evaluator import MathEvaluator
 
 class MathCalculator(dspy.Module):
     def __init__(self, max_iterations=5, num_attempts=3):

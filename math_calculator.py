@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import dspy
+import math
 import json
 import time
 import tqdm
@@ -89,6 +90,7 @@ class MathCalculator(dspy.Module):
         # Combine solutions using the most common value
         if combined_solution['final_solution'] is not None:
             print(f"Final combined solution: {combined_solution['final_solution']}")
+            return combined_solution['final_solution']
 
     def forward(self, task):
         """Forward pass for the math calculator with task splitting"""
@@ -126,9 +128,9 @@ class MathCalculator(dspy.Module):
             
         # Fall back to original processing if no subtasks found
         attempts = []
-            
-            # Run multiple attempts
-            for attempt in range(self.num_attempts):
+        
+        # Run multiple attempts
+        for attempt in range(self.num_attempts):
                 context = ""
                 final_reasoning = ""
                 final_solution = ""
@@ -318,8 +320,14 @@ class MathCalculator(dspy.Module):
                 if result.iteration_control.lower().strip() == "terminate":
                     break
                     
+            except ValueError as e:
+                print(f"Validation error in iteration {iteration + 1}: {str(e)}")
+                continue
+            except RuntimeError as e:
+                print(f"Runtime error in iteration {iteration + 1}: {str(e)}")
+                continue
             except Exception as e:
-                print(f"Error in iteration {iteration + 1}: {str(e)}")
+                print(f"Unexpected error in iteration {iteration + 1}: {str(e)}")
                 continue
                 
         return dspy.Prediction(
@@ -331,8 +339,17 @@ class MathCalculator(dspy.Module):
     def _is_correct(self, predicted, expected):
         """Compare solutions with tolerance for floating point"""
         try:
-            predicted_num = float(predicted)
-            expected_num = float(expected)
+            # Handle both string and numeric inputs
+            predicted_num = float(predicted) if isinstance(predicted, str) else float(predicted)
+            expected_num = float(expected) if isinstance(expected, str) else float(expected)
+            
+            # Handle NaN and infinity
+            if math.isnan(predicted_num) or math.isnan(expected_num):
+                return False
+            if math.isinf(predicted_num) or math.isinf(expected_num):
+                return False
+                
+            # Compare with tolerance
             return abs(predicted_num - expected_num) < 0.01
         except (ValueError, TypeError) as e:
             print(f"⚠️ Error evaluating solution - invalid number format: {str(e)}")

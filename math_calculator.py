@@ -81,7 +81,7 @@ class MathCalculator(dspy.Module):
             dataset = json.load(f)
         
         # Evaluate on first 1000 samples
-        dataset = dataset[:1000]
+        dataset = dataset[:100]
         
         # Use provided max_iter or default to instance value
         eval_iter = max_iter if max_iter is not None else self.max_iterations
@@ -207,10 +207,10 @@ if __name__ == "__main__":
     
     # Evaluate both configurations
     print("\nEvaluating with max_iter=1...")
-    results_iter1 = calculator_iter1.evaluate_on_dataset()
+    results_iter1 = calculator_iter1.evaluate_on_dataset(num_threads=100)
     
     print("\nEvaluating with max_iter=5...")
-    results_iter5 = calculator_iter5.evaluate_on_dataset()
+    results_iter5 = calculator_iter5.evaluate_on_dataset(num_threads=100)
     
     # Print comparison
     print("\nComparison Results:")

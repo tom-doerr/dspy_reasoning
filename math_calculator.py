@@ -27,15 +27,20 @@ class ProblemSolver(dspy.Module):
             subtask_attempts: Number of attempts to solve each subtask
         """
         super().__init__()
+        # Initialize instance variables first
+        self.max_iterations = max_iterations
+        self.num_attempts = num_attempts
+        self.subtask_attempts = subtask_attempts
+        
         self.reasoning_tree = {
             'root': None,
             'nodes': {},
             'metadata': {
                 'start_time': time.time(),
                 'config': {
-                    'max_iterations': max_iterations,
-                    'num_attempts': num_attempts,
-                    'subtask_attempts': subtask_attempts
+                    'max_iterations': self.max_iterations,
+                    'num_attempts': self.num_attempts,
+                    'subtask_attempts': self.subtask_attempts
                 }
             }
         }
@@ -71,9 +76,6 @@ class ProblemSolver(dspy.Module):
         self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
         self.split_task = dspy.ChainOfThought(TaskSplitterSignature)
         self.select_subtask_result = dspy.ChainOfThought(SubtaskResultSelectorSignature)
-        self.max_iterations = max_iterations
-        self.num_attempts = num_attempts
-        self.subtask_attempts = subtask_attempts
 
     def _split_task(self, task, depth=0, max_depth=3):
         """Split a general problem into subtasks using DSPy reasoning"""

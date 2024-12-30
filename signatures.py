@@ -1,5 +1,12 @@
 import dspy
 
+class TaskSplitterSignature(dspy.Signature):
+    """Split a complex math task into logical subtasks"""
+    task = dspy.InputField(desc="The complex math task to split")
+    context = dspy.InputField(desc="Context about the task", default="")
+    subtasks = dspy.OutputField(desc="List of logical subtasks to solve independently")
+    split_reasoning = dspy.OutputField(desc="Explanation of why the task was split this way")
+
 class SolutionSelectorSignature(dspy.Signature):
     """Select the best solution from multiple attempts"""
     task = dspy.InputField(desc="The original task being solved")

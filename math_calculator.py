@@ -15,39 +15,67 @@ class MathCalculator(dspy.Module):
         super().__init__()
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
         self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
+        self.split_task = dspy.ChainOfThought(TaskSplitterSignature)
         self.max_iterations = max_iterations
         self.num_attempts = num_attempts
 
     def _split_task(self, task):
-        """Split a complex task into subtasks"""
-        # Split on operators while preserving them
-        operators = ['+', '-', '*', '/', '^', '√', '%']
-        subtasks = []
-        current_task = ""
-        
-        for char in task:
-            if char in operators:
-                if current_task:
-                    subtasks.append(current_task.strip())
-                subtasks.append(char)
-                current_task = ""
-            else:
-                current_task += char
+        """Split a complex task into subtasks using DSPy reasoning"""
+        try:
+            result = self.split_task(task=task)
+            if not hasattr(result, 'subtasks'):
+                return [task]  # Fallback if splitting fails
                 
-        if current_task:
-            subtasks.append(current_task.strip())
+            # Parse subtasks from the output
+            subtasks = []
+            if isinstance(result.subtasks, str):
+                # Handle string output
+                subtasks = [s.strip() for s in result.subtasks.split('\n') if s.strip()]
+            elif isinstance(result.subtasks, list):
+                # Handle list output
+                subtasks = [str(s).strip() for s in result.subtasks if str(s).strip()]
+                
+            # Add reasoning about the split
+            print(f"Task Split Reasoning:\n{result.split_reasoning}")
+            print(f"Generated Subtasks: {subtasks}")
             
-        return subtasks
+            return subtasks if subtasks else [task]
+        except Exception as e:
+            print(f"Error splitting task: {e}")
+            return [task]  # Fallback to original task if splitting fails
 
     def _combine_subtask_results(self, subtask_results):
-        """Combine results from subtasks into a final solution"""
-        # Build and evaluate the combined expression
-        combined_expression = ""
+        """Combine results from DSPy-generated subtasks"""
+        # Build a structured solution combining all subtask results
+        combined_solution = {
+            'subtasks': [],
+            'final_solution': None
+        }
+        
+        # Process each subtask result
         for result in subtask_results:
-            if result.solution in ['+', '-', '*', '/', '^', '√', '%']:
-                combined_expression += f" {result.solution} "
-            else:
-                combined_expression += f" {result.solution} "
+            subtask_info = {
+                'reasoning': result.reasoning,
+                'solution': result.solution,
+                'notes': result.notes_output
+            }
+            combined_solution['subtasks'].append(subtask_info)
+            
+            # Try to extract a numerical solution if available
+            try:
+                solution_num = float(result.solution)
+                if combined_solution['final_solution'] is None:
+                    combined_solution['final_solution'] = solution_num
+                else:
+                    # Combine solutions using the most common value
+                    if combined_solution['final_solution'] != solution_num:
+                        print(f"Warning: Subtask solution mismatch ({combined_solution['final_solution']} vs {solution_num})")
+            except (ValueError, TypeError):
+                continue
+                
+        # If no numerical solution found, use the first subtask's solution
+        if combined_solution['final_solution'] is None and subtask_results:
+            combined_solution['final_solution'] = subtask_results[0].solution
                 
         try:
             # Use safe evaluation

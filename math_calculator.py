@@ -35,8 +35,20 @@ class MathCalculator(dspy.Module):
         self.num_attempts = num_attempts
         self.subtask_attempts = subtask_attempts
 
-    def _split_task(self, task):
-        """Split a complex task into subtasks using DSPy reasoning"""
+    def _is_complex_task(self, task):
+        """Determine if a task is complex enough to be split further"""
+        # Count the number of operations in the task
+        operators = ['+', '-', '*', '/', '^', '√', '%']
+        operator_count = sum(1 for char in task if char in operators)
+        
+        # Consider a task complex if it has more than 2 operations
+        return operator_count > 2
+
+    def _split_task(self, task, depth=0, max_depth=3):
+        """Recursively split a complex task into subtasks using DSPy reasoning"""
+        if depth >= max_depth:
+            return [task]  # Stop recursion at max depth
+            
         try:
             result = self.split_task(task=task, context="")
             if not hasattr(result, 'subtasks'):
@@ -52,10 +64,18 @@ class MathCalculator(dspy.Module):
                 subtasks = [str(s).strip() for s in result.subtasks if str(s).strip()]
                 
             # Add reasoning about the split
-            print(f"Task Split Reasoning:\n{result.split_reasoning}")
+            print(f"Task Split Reasoning (Depth {depth}):\n{result.split_reasoning}")
             print(f"Generated Subtasks: {subtasks}")
             
-            return subtasks if subtasks else [task]
+            # Recursively split subtasks if needed
+            final_subtasks = []
+            for subtask in subtasks:
+                if self._is_complex_task(subtask):  # Check if subtask can be split further
+                    final_subtasks.extend(self._split_task(subtask, depth+1, max_depth))
+                else:
+                    final_subtasks.append(subtask)
+                    
+            return final_subtasks if final_subtasks else [task]
         except Exception as e:
             print(f"Error splitting task: {e}")
             return [task]  # Fallback to original task if splitting fails
@@ -99,9 +119,9 @@ class MathCalculator(dspy.Module):
             return combined_solution['final_solution']
 
     def forward(self, task):
-        """Forward pass for the math calculator with task splitting"""
-        # First try to split the task into subtasks
-        subtasks = self._split_task(task)
+        """Forward pass for the math calculator with recursive task splitting"""
+        # First try to split the task into subtasks recursively
+        subtasks = self._split_task(task, max_depth=3)  # Set max recursion depth
         
         if len(subtasks) > 1:
             # Process each subtask independently with multiple attempts

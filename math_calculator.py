@@ -139,13 +139,13 @@ class MathCalculator(dspy.Module):
                         final_reasoning += f"\nAttempt {attempt + 1}, Iteration {iteration + 1} Reasoning:\n{result.reasoning}"
                         
                         # Build context for next iteration
-                    iteration_context = (
-                        f"Iteration {iteration + 1}:\n"
-                        f"Reasoning: {result.reasoning}\n"
-                        f"Solution: {result.solution}\n"
-                        f"Notes: {result.notes_output}\n"
-                    )
-                    context += "\n" + iteration_context
+                        iteration_context = (
+                            f"Iteration {iteration + 1}:\n"
+                            f"Reasoning: {result.reasoning}\n"
+                            f"Solution: {result.solution}\n"
+                            f"Notes: {result.notes_output}\n"
+                        )
+                        context += "\n" + iteration_context
                     
                     # Store the latest solution
                     final_solution = result.solution

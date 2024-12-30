@@ -5,9 +5,10 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class MathEvaluator:
-    def __init__(self, calculator, num_threads=10):
+    def __init__(self, calculator, num_threads=10, max_samples=100):
         self.calculator = calculator
         self.num_threads = num_threads
+        self.max_samples = max_samples
 
     def evaluate_single_task(self, item):
         task = item['task']
@@ -26,7 +27,7 @@ class MathEvaluator:
         with open(dataset_path) as f:
             dataset = json.load(f)
         
-        dataset = dataset[:100]
+        dataset = dataset[:self.max_samples] if hasattr(self, 'max_samples') else dataset[:100]
         
         results = {
             "correct": 0,

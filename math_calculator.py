@@ -93,7 +93,6 @@ class MathCalculator(dspy.Module):
         # If no solution was selected, choose the most consistent one
         if len(attempts) > 1:
             # Find the most common solution
-            from collections import Counter
             solution_counts = Counter(a['solution'] for a in attempts)
             most_common_solution = solution_counts.most_common(1)[0][0]
             
@@ -172,9 +171,14 @@ class MathCalculator(dspy.Module):
     def _is_correct(self, predicted, expected):
         """Compare solutions with tolerance for floating point"""
         try:
-            return abs(float(predicted) - float(expected)) < 0.01
+            predicted_num = float(predicted)
+            expected_num = float(expected)
+            return abs(predicted_num - expected_num) < 0.01
+        except (ValueError, TypeError) as e:
+            print(f"⚠️ Error evaluating solution - invalid number format: {str(e)}")
+            return False
         except Exception as e:
-            print(f"⚠️ Error evaluating solution: {str(e)}")
+            print(f"⚠️ Unexpected error evaluating solution: {str(e)}")
             return False
             
 

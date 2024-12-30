@@ -61,8 +61,6 @@ class MathOptimizer:
                 return 0
 
         # Configure MIPRO optimizer with reduced memory footprint
-        # if False:
-        if True:
             teleprompter = MIPROv2(
                 metric=metric,
                 num_candidates=num_candidates,
@@ -72,26 +70,6 @@ class MathOptimizer:
                 num_threads=100,
                 auto='light',
                 track_stats=True,  # Disable stats tracking to save memory
-            )
-        # if True:
-        if False:
-            teleprompter = BootstrapFewShotWithRandomSearch(
-            metric=metric,
-            max_bootstrapped_demos=4,
-            max_labeled_demos=8,
-            # num_candidate_programs=10,
-            num_candidate_programs=1,
-            num_threads=100
-        )
-        # if True:
-        if False:
-            teleprompter = BootstrapFewShot(
-            metric=metric,
-            max_bootstrapped_demos=4,
-            max_labeled_demos=8,
-            # num_candidate_programs=10,
-            # num_candidate_programs=1,
-            # num_threads=10
             )
 
         # Set student and teacher if not already set

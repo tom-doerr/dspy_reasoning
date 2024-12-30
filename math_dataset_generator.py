@@ -72,7 +72,41 @@ class MathDatasetGenerator:
             
             # Calculate solution using eval (safe since we control the input)
             try:
-                solution = eval(expression)
+                # Use a safer expression evaluator
+                from ast import literal_eval
+                try:
+                    # First try evaluating as-is
+                    solution = literal_eval(expression)
+                except (ValueError, SyntaxError):
+                    # If that fails, try evaluating as a math expression
+                    import operator
+                    import math
+                    allowed_operators = {
+                        '+': operator.add,
+                        '-': operator.sub,
+                        '*': operator.mul,
+                        '/': operator.truediv,
+                        '^': operator.pow,
+                        '%': operator.mod,
+                        '√': math.sqrt
+                    }
+                    # Parse and evaluate the expression safely
+                    stack = []
+                    for token in expression.split():
+                        if token in allowed_operators:
+                            if token == '√':
+                                operand = stack.pop()
+                                stack.append(allowed_operators[token](operand))
+                            else:
+                                right = stack.pop()
+                                left = stack.pop()
+                                stack.append(allowed_operators[token](left, right))
+                        else:
+                            try:
+                                stack.append(float(token))
+                            except ValueError:
+                                stack.append(0)  # Default to 0 for invalid tokens
+                    solution = stack[0] if stack else 0
                 # Round to 2 decimal places for division results
                 if isinstance(solution, float):
                     solution = round(solution, 2)

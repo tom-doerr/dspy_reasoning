@@ -27,10 +27,18 @@ class DeepSeekEvaluator:
         
         # Create DeepSeek model wrapper for DeepEval
         class DeepSeekWrapper(DeepSeekModel):
+            def __init__(self):
+                super().__init__()
+                self.model = self.lm
+                
             def generate_samples(self, prompt: str, n: int, temperature: float) -> tuple[str, float]:
                 # Use DSPy's DeepSeek model for generation
-                result = self.lm(prompt)
+                result = self.model(prompt)
                 return result, 1.0  # Return generated text and confidence score
+                
+            def load_model(self):
+                # Initialize the model
+                self.model = self.lm
 
         # Evaluate the model
         self.benchmark.evaluate(model=DeepSeekWrapper(), k=10)

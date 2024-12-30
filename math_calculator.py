@@ -29,9 +29,44 @@ class ProblemSolver(dspy.Module):
         super().__init__()
         self.reasoning_tree = {
             'root': None,
-            'nodes': {}
+            'nodes': {},
+            'metadata': {
+                'start_time': time.time(),
+                'config': {
+                    'max_iterations': max_iterations,
+                    'num_attempts': num_attempts,
+                    'subtask_attempts': subtask_attempts
+                }
+            }
         }
         self.current_node_id = 0
+
+    def _create_node(self, task, parent_id=None, node_type='task', input_data=None, output_data=None):
+        """Create a new node in the reasoning tree with input/output tracking"""
+        node_id = f"node_{self.current_node_id}"
+        self.current_node_id += 1
+        
+        node = {
+            'id': node_id,
+            'type': node_type,
+            'task': task,
+            'parent': parent_id,
+            'children': [],
+            'attempts': [],
+            'input': input_data if input_data else {},
+            'output': output_data if output_data else {},
+            'timestamp': time.time()
+        }
+        
+        self.reasoning_tree['nodes'][node_id] = node
+        
+        if parent_id:
+            self.reasoning_tree['nodes'][parent_id]['children'].append(node_id)
+            
+        if not self.reasoning_tree['root']:
+            self.reasoning_tree['root'] = node_id
+            
+        return node_id
         self.calculate = dspy.ChainOfThought(MathCalculationSignature)
         self.select_solution = dspy.ChainOfThought(SolutionSelectorSignature)
         self.split_task = dspy.ChainOfThought(TaskSplitterSignature)

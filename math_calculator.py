@@ -38,51 +38,65 @@ class MathCalculator(dspy.Module):
     def _split_task(self, task, depth=0, max_depth=3):
         """Split a task into subtasks using DSPy reasoning"""
         if depth >= max_depth:
-            return [task]  # Stop recursion at max depth
+            print(f"Max recursion depth {max_depth} reached for task: {task}")
+            return [task]
             
         try:
+            # Log task splitting attempt
+            print(f"Attempting to split task (Depth {depth}): {task}")
+            
             result = self.split_task(task=task, context="")
             if not hasattr(result, 'subtasks'):
-                return [task]  # Fallback if splitting fails
+                print(f"Failed to split task - no subtasks returned: {task}")
+                return [task]
                 
             # Parse subtasks from the output
             subtasks = []
             if isinstance(result.subtasks, str):
-                # Handle string output
                 subtasks = [s.strip() for s in result.subtasks.split('\n') if s.strip()]
             elif isinstance(result.subtasks, list):
-                # Handle list output
                 subtasks = [str(s).strip() for s in result.subtasks if str(s).strip()]
                 
-            # Add reasoning about the split
+            # Log the split reasoning and results
             print(f"Task Split Reasoning (Depth {depth}):\n{result.split_reasoning}")
             print(f"Generated Subtasks: {subtasks}")
             
             # Recursively split subtasks if needed
             final_subtasks = []
             for subtask in subtasks:
-                # Let DSPy decide if subtask should be split further
-                final_subtasks.extend(self._split_task(subtask, depth+1, max_depth))
+                try:
+                    final_subtasks.extend(self._split_task(subtask, depth+1, max_depth))
+                except Exception as e:
+                    print(f"Error recursively splitting subtask {subtask}: {e}")
+                    final_subtasks.append(subtask)
                     
             return final_subtasks if final_subtasks else [task]
         except Exception as e:
-            print(f"Error splitting task: {e}")
-            return [task]  # Fallback to original task if splitting fails
+            print(f"Error splitting task {task}: {e}")
+            return [task]
 
     def _combine_subtask_results(self, subtask_results: List[dspy.Prediction]) -> Dict[str, Any]:
         """Combine results from DSPy-generated subtasks"""
+        if not subtask_results:
+            return dspy.Prediction(
+                reasoning="No subtask results to combine",
+                solution=None,
+                notes_output=""
+            )
+            
+        # Build combined reasoning
+        combined_reasoning = []
+        for i, result in enumerate(subtask_results, 1):
+            combined_reasoning.append(
+                f"Subtask {i}:\n"
+                f"Reasoning: {result.reasoning}\n"
+                f"Solution: {result.solution}\n"
+            )
+            
         # Let DSPy handle combining the results
-        combined_reasoning = "\n".join(
-            f"Subtask {i+1}:\n{r.reasoning}\nSolution: {r.solution}\n" 
-            for i, r in enumerate(subtask_results)
-        )
-        
-        # Use the last subtask's solution as the final solution
-        final_solution = subtask_results[-1].solution if subtask_results else None
-        
         return dspy.Prediction(
-            reasoning=f"Combined subtask results:\n{combined_reasoning}",
-            solution=final_solution,
+            reasoning="Combined subtask results:\n" + "\n".join(combined_reasoning),
+            solution=subtask_results[-1].solution,
             notes_output="Combined results from subtasks"
         )
 

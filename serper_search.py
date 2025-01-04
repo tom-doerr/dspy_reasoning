@@ -4,7 +4,7 @@ import json
 import sys
 import dspy
 from typing import List, Dict, Optional
-from crewai_tools import SerperDevTool
+import requests
 
 def main():
     if len(sys.argv) < 2:
@@ -52,16 +52,31 @@ class SerperSearch(dspy.Module):
         # Serper API uses POST with JSON body and API key in headers
         
         try:
-            # Initialize SerperDevTool
-            tool = SerperDevTool(
-                search_url="https://google.serper.dev/search",
-                n_results=5,
-                location="Austin, Texas",  # Default location
-                locale="en-US"            # Default locale
+            # Make direct HTTP request to Serper API
+            headers = {
+                'X-API-KEY': self.api_key,
+                'Content-Type': 'application/json'
+            }
+            payload = {
+                'q': query,
+                'num': 5,
+                'gl': 'us',
+                'hl': 'en'
+            }
+            
+            response = requests.post(
+                'https://google.serper.dev/search',
+                headers=headers,
+                json=payload
             )
             
-            # Execute search
-            results = tool.run(search_query=query)
+            if response.status_code != 200:
+                return dspy.Prediction(
+                    search_results="[]",
+                    search_reasoning=f"API Error: {response.status_code} - {response.text}"
+                )
+                
+            results = response.json()
             
             # Extract relevant information from results
             search_data = []

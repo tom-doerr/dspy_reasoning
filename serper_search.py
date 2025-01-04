@@ -41,22 +41,22 @@ class SerperSearchSignature(dspy.Signature):
 class SerperSearch(dspy.Module):
     def __init__(self, api_key: Optional[str] = None):
         super().__init__()
-        self.api_key = api_key or os.getenv("SERPAPI_API_KEY")
+        self.api_key = api_key or os.getenv("SERPER_API_KEY")
         if not self.api_key:
-            raise ValueError("Serper API key not found. Set SERPAPI_API_KEY environment variable.")
+            raise ValueError("Serper API key not found. Set SERPER_API_KEY environment variable.")
         
         self.search = dspy.ChainOfThought(SerperSearchSignature)
         
     def forward(self, query: str, context: str = "") -> dspy.Prediction:
         # Execute the search using Serper API
-        params = {
-            'q': query,
-            'api_key': self.api_key,
-            'num': 5  # Get top 5 results
-        }
+        # Serper API uses POST with JSON body and API key in headers
         
         try:
-            response = requests.get('https://serpapi.com/search', params=params)
+            response = requests.post(
+                'https://google.serper.dev/search',
+                headers={'X-API-KEY': self.api_key},
+                json={'q': query, 'num': 5}
+            )
             
             if response.status_code == 401:
                 return dspy.Prediction(

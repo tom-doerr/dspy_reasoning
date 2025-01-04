@@ -57,8 +57,26 @@ class SerperSearch(dspy.Module):
         
         try:
             response = requests.get('https://serpapi.com/search', params=params)
+            
+            if response.status_code == 401:
+                return dspy.Prediction(
+                    search_results="[]",
+                    search_reasoning="Error: Invalid API key. Please check your SERPAPI_API_KEY environment variable."
+                )
+            elif response.status_code == 429:
+                return dspy.Prediction(
+                    search_results="[]", 
+                    search_reasoning="Error: API rate limit exceeded. Please wait before making more requests."
+                )
+                
             response.raise_for_status()
             results = response.json()
+            
+            if 'error' in results:
+                return dspy.Prediction(
+                    search_results="[]",
+                    search_reasoning=f"API Error: {results.get('error', 'Unknown error')}"
+                )
             
             # Extract relevant information from results
             search_data = []
@@ -77,10 +95,16 @@ class SerperSearch(dspy.Module):
                 search_results=json.dumps(search_data)
             )
             
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Network Error: {str(e)}"
             return dspy.Prediction(
                 search_results="[]",
-                search_reasoning=f"Search failed: {str(e)}"
+                search_reasoning=error_msg
+            )
+        except json.JSONDecodeError:
+            return dspy.Prediction(
+                search_results="[]",
+                search_reasoning="Error: Invalid response format from API"
             )
 
 def add_search_to_pipeline(pipeline: dspy.Module) -> dspy.Module:

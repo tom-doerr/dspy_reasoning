@@ -1,8 +1,35 @@
+#!/usr/bin/env python3
 import os
 import json
+import sys
 import dspy
 from typing import List, Dict, Optional
 from serpapi import GoogleSearch
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: serper_search.py <search_query>")
+        sys.exit(1)
+        
+    query = " ".join(sys.argv[1:])
+    print(f"Searching for: {query}")
+    
+    searcher = SerperSearch()
+    results = searcher(query)
+    
+    print("\nSearch Results:")
+    try:
+        results_data = json.loads(results.search_results)
+        for i, result in enumerate(results_data, 1):
+            print(f"\nResult {i}:")
+            print(f"Title: {result.get('title', 'No title')}")
+            print(f"Link: {result.get('link', 'No link')}")
+            print(f"Snippet: {result.get('snippet', 'No snippet')}")
+    except json.JSONDecodeError:
+        print("Error parsing search results")
+    
+    print("\nSearch Reasoning:")
+    print(results.search_reasoning)
 
 class SerperSearchSignature(dspy.Signature):
     """Search for relevant information using Serper API"""
@@ -82,3 +109,6 @@ def add_search_to_pipeline(pipeline: dspy.Module) -> dspy.Module:
     
     pipeline.forward = enhanced_forward
     return pipeline
+
+if __name__ == "__main__":
+    main()

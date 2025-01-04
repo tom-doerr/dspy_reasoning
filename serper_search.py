@@ -4,7 +4,7 @@ import json
 import sys
 import dspy
 from typing import List, Dict, Optional
-import requests
+from crewai_tools import SerperDevTool
 
 def main():
     if len(sys.argv) < 2:
@@ -52,66 +52,41 @@ class SerperSearch(dspy.Module):
         # Serper API uses POST with JSON body and API key in headers
         
         try:
-            response = requests.post(
-                'https://google.serper.dev/search',
-                headers={'X-API-KEY': self.api_key},
-                json={'q': query, 'num': 5}
+            # Initialize SerperDevTool
+            tool = SerperDevTool(
+                search_url="https://google.serper.dev/search",
+                n_results=5,
+                location="Austin, Texas",  # Default location
+                locale="en-US"            # Default locale
             )
             
-            if response.status_code == 400:
-                return dspy.Prediction(
-                    search_results="[]",
-                    search_reasoning="Error: Invalid search request. Please check your query format."
-                )
-            elif response.status_code == 401:
-                return dspy.Prediction(
-                    search_results="[]",
-                    search_reasoning="Error: Invalid API key. Please check your SERPER_API_KEY environment variable."
-                )
-            elif response.status_code == 429:
-                return dspy.Prediction(
-                    search_results="[]", 
-                    search_reasoning="Error: API rate limit exceeded. Please wait before making more requests."
-                )
-            elif response.status_code == 403:
-                return dspy.Prediction(
-                    search_results="[]",
-                    search_reasoning="Error: Forbidden. Check your API permissions."
-                )
-                
-            # Handle successful response
-            if response.status_code == 200:
-                results = response.json()
-                if not results:
-                    return dspy.Prediction(
-                        search_results="[]",
-                        search_reasoning="Error: Empty response from API"
-                    )
-            
-            if 'error' in results:
-                return dspy.Prediction(
-                    search_results="[]",
-                    search_reasoning=f"API Error: {results.get('error', 'Unknown error')}"
-                )
+            # Execute search
+            results = tool.run(search_query=query)
             
             # Extract relevant information from results
             search_data = []
-            if results.get('organicResults'):
-                # Handle Serper's response format
-                for result in results['organicResults']:
+            if isinstance(results, list):
+                for result in results:
                     search_data.append({
                         'title': result.get('title'),
                         'link': result.get('link'),
                         'snippet': result.get('snippet')
                     })
-            elif results.get('organic_results'):
-                # Handle alternative response format
-                for result in results['organic_results']:
-                    search_data.append({
-                        'title': result.get('title'),
-                        'link': result.get('link'),
-                        'snippet': result.get('snippet')
-                    })
+            elif isinstance(results, dict):
+                if results.get('organicResults'):
+                    for result in results['organicResults']:
+                        search_data.append({
+                            'title': result.get('title'),
+                            'link': result.get('link'),
+                            'snippet': result.get('snippet')
+                        })
+                elif results.get('organic_results'):
+                    for result in results['organic_results']:
+                        search_data.append({
+                            'title': result.get('title'),
+                            'link': result.get('link'),
+                            'snippet': result.get('snippet')
+                        })
             
             # Use DSPy to analyze and select most relevant results
             return self.search(
@@ -120,16 +95,11 @@ class SerperSearch(dspy.Module):
                 search_results=json.dumps(search_data)
             )
             
-        except requests.exceptions.RequestException as e:
-            error_msg = f"Network Error: {str(e)}"
+        except Exception as e:
+            error_msg = f"Search Error: {str(e)}"
             return dspy.Prediction(
                 search_results="[]",
                 search_reasoning=error_msg
-            )
-        except json.JSONDecodeError:
-            return dspy.Prediction(
-                search_results="[]",
-                search_reasoning="Error: Invalid response format from API"
             )
 
 def add_search_to_pipeline(pipeline: dspy.Module) -> dspy.Module:

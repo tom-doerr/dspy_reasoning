@@ -1,0 +1,84 @@
+import os
+import json
+import dspy
+from typing import List, Dict, Optional
+from serpapi import GoogleSearch
+
+class SerperSearchSignature(dspy.Signature):
+    """Search for relevant information using Serper API"""
+    query = dspy.InputField(desc="The search query to execute")
+    context = dspy.InputField(desc="Context about why this search is needed", default="")
+    search_results = dspy.OutputField(desc="List of relevant search results with snippets")
+    search_reasoning = dspy.OutputField(desc="Explanation of why these results were selected")
+
+class SerperSearch(dspy.Module):
+    def __init__(self, api_key: Optional[str] = None):
+        super().__init__()
+        self.api_key = api_key or os.getenv("SERPAPI_API_KEY")
+        if not self.api_key:
+            raise ValueError("Serper API key not found. Set SERPAPI_API_KEY environment variable.")
+        
+        self.search = dspy.ChainOfThought(SerperSearchSignature)
+        
+    def forward(self, query: str, context: str = "") -> dspy.Prediction:
+        # Execute the search using Serper API
+        params = {
+            'q': query,
+            'api_key': self.api_key,
+            'num': 5  # Get top 5 results
+        }
+        
+        try:
+            client = GoogleSearch(params)
+            results = client.get_dict()
+            
+            # Extract relevant information from results
+            search_data = []
+            if 'organic_results' in results:
+                for result in results['organic_results']:
+                    search_data.append({
+                        'title': result.get('title'),
+                        'link': result.get('link'),
+                        'snippet': result.get('snippet')
+                    })
+            
+            # Use DSPy to analyze and select most relevant results
+            return self.search(
+                query=query,
+                context=context,
+                search_results=json.dumps(search_data)
+            )
+            
+        except Exception as e:
+            return dspy.Prediction(
+                search_results="[]",
+                search_reasoning=f"Search failed: {str(e)}"
+            )
+
+def add_search_to_pipeline(pipeline: dspy.Module) -> dspy.Module:
+    """Add search capability to an existing reasoning pipeline"""
+    if not hasattr(pipeline, 'search_module'):
+        pipeline.search_module = SerperSearch()
+    
+    original_forward = pipeline.forward
+    
+    def enhanced_forward(*args, **kwargs):
+        # Check if search is needed
+        context = kwargs.get('context', '')
+        if "search for" in context.lower() or "look up" in context.lower():
+            # Extract search query from context
+            search_query = context.split("search for")[-1].split("look up")[-1].strip()
+            
+            # Execute search
+            search_results = pipeline.search_module(
+                query=search_query,
+                context=context
+            )
+            
+            # Update context with search results
+            kwargs['context'] = f"{context}\n\nSearch Results:\n{search_results.search_results}"
+        
+        return original_forward(*args, **kwargs)
+    
+    pipeline.forward = enhanced_forward
+    return pipeline

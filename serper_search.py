@@ -58,19 +58,35 @@ class SerperSearch(dspy.Module):
                 json={'q': query, 'num': 5}
             )
             
-            if response.status_code == 401:
+            if response.status_code == 400:
                 return dspy.Prediction(
                     search_results="[]",
-                    search_reasoning="Error: Invalid API key. Please check your SERPAPI_API_KEY environment variable."
+                    search_reasoning="Error: Invalid search request. Please check your query format."
+                )
+            elif response.status_code == 401:
+                return dspy.Prediction(
+                    search_results="[]",
+                    search_reasoning="Error: Invalid API key. Please check your SERPER_API_KEY environment variable."
                 )
             elif response.status_code == 429:
                 return dspy.Prediction(
                     search_results="[]", 
                     search_reasoning="Error: API rate limit exceeded. Please wait before making more requests."
                 )
+            elif response.status_code == 403:
+                return dspy.Prediction(
+                    search_results="[]",
+                    search_reasoning="Error: Forbidden. Check your API permissions."
+                )
                 
-            response.raise_for_status()
-            results = response.json()
+            # Handle successful response
+            if response.status_code == 200:
+                results = response.json()
+                if not results:
+                    return dspy.Prediction(
+                        search_results="[]",
+                        search_reasoning="Error: Empty response from API"
+                    )
             
             if 'error' in results:
                 return dspy.Prediction(
@@ -80,7 +96,16 @@ class SerperSearch(dspy.Module):
             
             # Extract relevant information from results
             search_data = []
-            if 'organic_results' in results:
+            if results.get('organicResults'):
+                # Handle Serper's response format
+                for result in results['organicResults']:
+                    search_data.append({
+                        'title': result.get('title'),
+                        'link': result.get('link'),
+                        'snippet': result.get('snippet')
+                    })
+            elif results.get('organic_results'):
+                # Handle alternative response format
                 for result in results['organic_results']:
                     search_data.append({
                         'title': result.get('title'),

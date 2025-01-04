@@ -4,7 +4,7 @@ import json
 import sys
 import dspy
 from typing import List, Dict, Optional
-from serpapi import GoogleSearch
+from serpapi.google_search import GoogleSearch
 
 def main():
     if len(sys.argv) < 2:

@@ -4,7 +4,7 @@ import json
 import sys
 import dspy
 from typing import List, Dict, Optional
-from serpapi.google_search import GoogleSearch
+import requests
 
 def main():
     if len(sys.argv) < 2:
@@ -56,8 +56,9 @@ class SerperSearch(dspy.Module):
         }
         
         try:
-            client = GoogleSearch(params)
-            results = client.get_dict()
+            response = requests.get('https://serpapi.com/search', params=params)
+            response.raise_for_status()
+            results = response.json()
             
             # Extract relevant information from results
             search_data = []

@@ -63,7 +63,9 @@ def create_dataset() -> List[ResearchTask]:
         if len(task["input"]) < 10 or len(task["output"]) < 10:
             print(f"Warning: Task too short, skipping: {task['input']}")
             continue
-        dataset.append(ResearchTask(task["input"], task["output"]))
+        # Create example with inputs properly set
+        example = ResearchTask(input=task["input"], output=task["output"])
+        dataset.append(example.with_inputs('input'))
     return dataset
 
 class ResearcherOptimizer:

@@ -114,7 +114,8 @@ class ResearcherOptimizer:
         optimized_researcher = teleprompter.compile(
             base_researcher,
             trainset=self.dataset,
-            num_trials=num_iterations
+            num_trials=num_iterations,
+            requires_permission_to_run=False  # Disable confirmation prompt
         )
         
         return optimized_researcher

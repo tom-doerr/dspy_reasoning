@@ -4,6 +4,8 @@ import sys
 import requests
 from typing import List, Dict, Optional
 
+from pprint import pprint
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: serper_search.py <search_query>")
@@ -16,11 +18,7 @@ def main():
     results = searcher.search(query)
     
     print("\nSearch Results:")
-    for i, result in enumerate(results, 1):
-        print(f"\nResult {i}:")
-        print(f"Title: {result.get('title', 'No title')}")
-        print(f"Link: {result.get('link', 'No link')}")
-        print(f"Snippet: {result.get('snippet', 'No snippet')}")
+    pprint(results)
 
 class SerperSearch:
     def __init__(self, api_key: Optional[str] = None):

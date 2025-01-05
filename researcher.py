@@ -8,6 +8,7 @@ class DecideNextActionSignature(dspy.Signature):
     search_results = dspy.InputField(desc="All search results from previous searches")
     current_text = dspy.InputField(desc="The current text being worked on")
     downloaded_sites = dspy.InputField(desc="All previously downloaded website contents")
+    reasoning = dspy.OutputField(desc="Reasoning for the chosen action")
     action = dspy.OutputField(desc="Next action to take: 'search', 'rewrite', or 'download'")
     action_reasoning = dspy.OutputField(desc="Reasoning for the chosen action")
 
@@ -15,6 +16,7 @@ class RewriteTextSignature(dspy.Signature):
     """Rewrite the current text using all available information"""
     all_texts = dspy.InputField(desc="All texts including search results and downloaded content")
     current_text = dspy.InputField(desc="The current text being rewritten")
+    reasoning = dspy.OutputField(desc="Reasoning for the rewrite")
     rewritten_text = dspy.OutputField(desc="The new rewritten text")
     rewrite_reasoning = dspy.OutputField(desc="Explanation of changes made")
 
@@ -22,8 +24,8 @@ class EvaluateTextSignature(dspy.Signature):
     """Evaluate the quality of the rewritten text"""
     original_text = dspy.InputField(desc="The original text before rewriting")
     rewritten_text = dspy.InputField(desc="The rewritten text to evaluate")
-    evaluation = dspy.OutputField(desc="Evaluation of text quality on a scale from 1-10")
     evaluation_reasoning = dspy.OutputField(desc="Detailed reasoning for the evaluation score")
+    evaluation = dspy.OutputField(desc="Evaluation of text quality on a scale from 1-10")
     improvement_suggestions = dspy.OutputField(desc="Suggestions for further improving the text")
 
 class Researcher(dspy.Module):

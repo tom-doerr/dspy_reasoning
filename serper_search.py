@@ -71,6 +71,7 @@ class SerperSearch:
         
         # Check for different possible result formats
         result_sets = [
+            results.get('organic'),  # Primary key in Serper API
             results.get('organicResults'),
             results.get('organic_results'),
             results.get('items'),
@@ -81,11 +82,20 @@ class SerperSearch:
         for result_set in result_sets:
             if result_set and isinstance(result_set, list):
                 for result in result_set:
-                    search_data.append({
-                        'title': result.get('title', result.get('name', 'No title')),
-                        'link': result.get('link', result.get('url', 'No link')),
-                        'snippet': result.get('snippet', result.get('description', 'No snippet'))
-                    })
+                    # Extract fields with fallbacks
+                    title = result.get('title', result.get('name', 'No title'))
+                    link = result.get('link', result.get('url', 'No link'))
+                    snippet = result.get('snippet', result.get('description', 'No snippet'))
+                    
+                    # Only include results with at least a title or snippet
+                    if title != 'No title' or snippet != 'No snippet':
+                        search_data.append({
+                            'title': title,
+                            'link': link,
+                            'snippet': snippet,
+                            'date': result.get('date', ''),
+                            'source': result.get('source', '')
+                        })
                 break
                 
         if not search_data:

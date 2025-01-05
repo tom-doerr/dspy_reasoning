@@ -93,11 +93,24 @@ class Researcher(dspy.Module):
             original_text=self.all_texts[0] if self.all_texts else "",
             rewritten_text=self.current_text
         )
-        return {
-            'evaluation': result.evaluation,
-            'evaluation_reasoning': result.evaluation_reasoning,
-            'improvement_suggestions': result.improvement_suggestions
-        }
+        try:
+            # Convert evaluation score to integer
+            evaluation_score = int(result.evaluation)
+            # Clamp score between 1-10
+            evaluation_score = max(1, min(10, evaluation_score))
+                
+            return {
+                'evaluation': evaluation_score,
+                'evaluation_reasoning': result.evaluation_reasoning,
+                'improvement_suggestions': result.improvement_suggestions
+            }
+        except (ValueError, TypeError):
+            # Default to low score if conversion fails
+            return {
+                'evaluation': 1,
+                'evaluation_reasoning': "Invalid evaluation score format",
+                'improvement_suggestions': "Ensure evaluation returns a valid number between 1-10"
+            }
 
     def run_research(self, initial_text: str) -> Dict:
         """Run the research process with iteration control"""

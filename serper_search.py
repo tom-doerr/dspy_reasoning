@@ -26,8 +26,52 @@ class SerperSearch:
         if not self.api_key:
             raise ValueError("Serper API key not found. Set SERPER_API_KEY environment variable.")
         
-    def search(self, query: str, num_results: int = 5) -> List[Dict]:
-        """Perform a search using Serper API"""
+    def _parse_response(self, response: Dict) -> Dict:
+        """Parse the raw API response into a structured format"""
+        parsed = {
+            'search_parameters': response.get('searchParameters', {}),
+            'organic_results': [],
+            'top_stories': [],
+            'related_searches': [],
+            'credits_used': response.get('credits', 0)
+        }
+        
+        # Parse organic results
+        for result in response.get('organic', []):
+            parsed['organic_results'].append({
+                'title': result.get('title', 'No title'),
+                'link': result.get('link', 'No link'),
+                'snippet': result.get('snippet', 'No snippet'),
+                'date': result.get('date', ''),
+                'position': result.get('position', 0),
+                'sitelinks': [
+                    {
+                        'title': sl.get('title', ''),
+                        'link': sl.get('link', '')
+                    } for sl in result.get('sitelinks', [])
+                ]
+            })
+            
+        # Parse top stories
+        for story in response.get('topStories', []):
+            parsed['top_stories'].append({
+                'title': story.get('title', 'No title'),
+                'link': story.get('link', 'No link'),
+                'source': story.get('source', ''),
+                'date': story.get('date', ''),
+                'image_url': story.get('imageUrl', '')
+            })
+            
+        # Parse related searches
+        for search in response.get('relatedSearches', []):
+            parsed['related_searches'].append({
+                'query': search.get('query', '')
+            })
+            
+        return parsed
+
+    def search(self, query: str, num_results: int = 5) -> Dict:
+        """Perform a search using Serper API and return structured results"""
         headers = {
             'X-API-KEY': self.api_key,
             'Content-Type': 'application/json'
@@ -57,7 +101,7 @@ class SerperSearch:
             raw_data = response.json()
             print(f"Raw API Response: {raw_data}")
             
-            return raw_data
+            return self._parse_response(raw_data)
             
         except requests.exceptions.RequestException as e:
             print(f"Search failed: {str(e)}")

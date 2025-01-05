@@ -30,8 +30,8 @@ class Researcher(dspy.Module):
     def __init__(self, max_iterations: int = 10, max_searches: int = 3):
         super().__init__()
         
-        # Configure DeepSeek as the language model
-        self.lm = dspy.LM(model="deepseek/deepseek-chat", temperature=0.3, cache=False)
+        # Configure DeepSeek as the language model with higher temperature for more creativity
+        self.lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1.5, cache=False)
         dspy.settings.configure(lm=self.lm)
         
         self.max_iterations = max_iterations

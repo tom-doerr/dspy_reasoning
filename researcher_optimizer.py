@@ -118,7 +118,7 @@ class ResearcherOptimizer:
             init_temperature=1.0,
             prompt_model=self.lm,
             task_model=self.lm,
-            auto='light',
+            auto='medium',
             track_stats=True
         )
         

@@ -66,8 +66,6 @@ class ResearcherOptimizer:
         # Simple evaluation metric (could be enhanced)
         score = self._calculate_similarity(final_text, example.output)
         return score
-            
-        return total_score / len(self.dataset)
     
     def _calculate_similarity(self, text1: str, text2: str) -> float:
         """Improved text similarity metric using TF-IDF cosine similarity"""

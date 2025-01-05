@@ -65,43 +65,44 @@ class SerperSearch:
                 print(f"Response content: {e.response.text}")
             return []
 
-    def _parse_results(self, results: Dict) -> List[Dict]:
-        """Parse Serper API results into a simplified format"""
-        search_data = []
+    def _parse_results(self, results: Dict) -> Dict:
+        """Parse and return the full Serper API response structure"""
+        parsed = {
+            'search_parameters': results.get('searchParameters', {}),
+            'organic': [],
+            'top_stories': [],
+            'related_searches': [],
+            'credits': results.get('credits', 0)
+        }
         
-        # Check for different possible result formats
-        result_sets = [
-            results.get('organic'),  # Primary key in Serper API
-            results.get('organicResults'),
-            results.get('organic_results'),
-            results.get('items'),
-            results.get('results')
-        ]
-        
-        # Try each possible result format
-        for result_set in result_sets:
-            if result_set and isinstance(result_set, list):
-                for result in result_set:
-                    # Extract fields with fallbacks
-                    title = result.get('title', result.get('name', 'No title'))
-                    link = result.get('link', result.get('url', 'No link'))
-                    snippet = result.get('snippet', result.get('description', 'No snippet'))
-                    
-                    # Only include results with at least a title or snippet
-                    if title != 'No title' or snippet != 'No snippet':
-                        search_data.append({
-                            'title': title,
-                            'link': link,
-                            'snippet': snippet,
-                            'date': result.get('date', ''),
-                            'source': result.get('source', '')
-                        })
-                break
-                
-        if not search_data:
-            print(f"No results found in API response. Full response: {results}")
+        # Parse organic results
+        for result in results.get('organic', []):
+            parsed['organic'].append({
+                'title': result.get('title', 'No title'),
+                'link': result.get('link', 'No link'),
+                'snippet': result.get('snippet', 'No snippet'),
+                'date': result.get('date', ''),
+                'position': result.get('position', 0),
+                'sitelinks': result.get('sitelinks', [])
+            })
             
-        return search_data
+        # Parse top stories
+        for story in results.get('topStories', []):
+            parsed['top_stories'].append({
+                'title': story.get('title', 'No title'),
+                'link': story.get('link', 'No link'),
+                'source': story.get('source', ''),
+                'date': story.get('date', ''),
+                'image_url': story.get('imageUrl', '')
+            })
+            
+        # Parse related searches
+        for search in results.get('relatedSearches', []):
+            parsed['related_searches'].append({
+                'query': search.get('query', '')
+            })
+            
+        return parsed
 
 
 if __name__ == "__main__":

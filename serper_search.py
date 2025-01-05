@@ -45,24 +45,54 @@ class SerperSearch:
             response = requests.post(
                 'https://google.serper.dev/search',
                 headers=headers,
-                json=payload
+                json=payload,
+                timeout=10
             )
+            
+            # Print debug info
+            print(f"API Response Status: {response.status_code}")
+            print(f"API Response Headers: {response.headers}")
+            
             response.raise_for_status()
-            return self._parse_results(response.json())
+            
+            # Print raw response for debugging
+            raw_data = response.json()
+            print(f"Raw API Response: {raw_data}")
+            
+            return self._parse_results(raw_data)
+            
         except requests.exceptions.RequestException as e:
             print(f"Search failed: {str(e)}")
+            if hasattr(e, 'response') and e.response:
+                print(f"Response content: {e.response.text}")
             return []
 
     def _parse_results(self, results: Dict) -> List[Dict]:
         """Parse Serper API results into a simplified format"""
         search_data = []
-        if results.get('organicResults'):
-            for result in results['organicResults']:
-                search_data.append({
-                    'title': result.get('title'),
-                    'link': result.get('link'),
-                    'snippet': result.get('snippet')
-                })
+        
+        # Check for different possible result formats
+        result_sets = [
+            results.get('organicResults'),
+            results.get('organic_results'),
+            results.get('items'),
+            results.get('results')
+        ]
+        
+        # Try each possible result format
+        for result_set in result_sets:
+            if result_set and isinstance(result_set, list):
+                for result in result_set:
+                    search_data.append({
+                        'title': result.get('title', result.get('name', 'No title')),
+                        'link': result.get('link', result.get('url', 'No link')),
+                        'snippet': result.get('snippet', result.get('description', 'No snippet'))
+                    })
+                break
+                
+        if not search_data:
+            print(f"No results found in API response. Full response: {results}")
+            
         return search_data
 
 

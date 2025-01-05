@@ -3,6 +3,7 @@ import dspy
 from typing import List, Dict
 from researcher import Researcher
 from dspy.teleprompt import MIPRO
+from dspy import Example
 
 # Dataset of task prompts for optimization
 RESEARCH_TASKS = [
@@ -48,11 +49,9 @@ RESEARCH_TASKS = [
     }
 ]
 
-class ResearchTask(dspy.Example):
+class ResearchTask(Example):
     def __init__(self, input_text: str, output_text: str):
-        super().__init__()
-        self.input = input_text
-        self.output = output_text
+        super().__init__(input=input_text, output=output_text)
 
 def create_dataset() -> List[ResearchTask]:
     """Create dataset from predefined research tasks"""
@@ -92,11 +91,12 @@ class ResearcherOptimizer:
     
     def optimize(self, num_candidates: int = 5, num_iterations: int = 3) -> Researcher:
         """Optimize the researcher using MIPRO"""
-        # Define the teleprompter
+        # Define the teleprompter with MIPROv2
         teleprompter = MIPRO(
             metric=self.evaluate_researcher,
             num_candidates=num_candidates,
-            num_threads=4
+            num_threads=1,  # MIPROv2 uses internal parallelization
+            teacher_settings=dict(lm=self.lm)
         )
         
         # Create initial researcher

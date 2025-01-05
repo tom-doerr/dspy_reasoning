@@ -50,8 +50,8 @@ RESEARCH_TASKS = [
 ]
 
 class ResearchTask(Example):
-    def __init__(self, input: str, output: str):
-        super().__init__()
+    def __init__(self, input: str, output: str, **kwargs):
+        super().__init__(**kwargs)
         self.input = input
         self.output = output
 
@@ -67,6 +67,7 @@ def create_dataset() -> List[ResearchTask]:
             continue
         # Create example with inputs properly set
         example = ResearchTask(input=task["input"], output=task["output"])
+        example = example.with_inputs('input')
         dataset.append(example)
     return dataset
 

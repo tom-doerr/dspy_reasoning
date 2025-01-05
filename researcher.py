@@ -110,10 +110,21 @@ class Researcher(dspy.Module):
             rewritten_text=self.current_text
         )
         try:
-            # Convert evaluation score to integer
-            evaluation_score = int(result.evaluation)
-            # Clamp score between 1-10
-            evaluation_score = max(1, min(10, evaluation_score))
+            # Handle different evaluation score formats
+            if isinstance(result.evaluation, str):
+                # Try to extract number from string
+                import re
+                numbers = re.findall(r'\d+', result.evaluation)
+                if numbers:
+                    evaluation_score = float(numbers[0])
+                else:
+                    evaluation_score = 1.0
+            else:
+                evaluation_score = float(result.evaluation)
+                
+            # Clamp score between 1-10 and round to nearest integer
+            evaluation_score = max(1.0, min(10.0, evaluation_score))
+            evaluation_score = round(evaluation_score)
                 
             return {
                 'evaluation': evaluation_score,
@@ -163,9 +174,16 @@ class Researcher(dspy.Module):
                     search_term = self.generate_search_terms()
                     print(f"Performing search for: {search_term}...")
                     
-                    # Perform actual search (implementation would go here)
-                    # search_results = serper_search(search_term)
-                    # self.add_search_results(search_results)
+                    try:
+                        # Perform actual search with error handling
+                        search_results = serper_search(search_term)
+                        if search_results:
+                            self.add_search_results(search_results)
+                        else:
+                            print("Warning: No search results found")
+                    except Exception as e:
+                        print(f"Search error: {str(e)}")
+                        continue
                     
                     continue
                     

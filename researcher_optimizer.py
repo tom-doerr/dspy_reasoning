@@ -54,8 +54,17 @@ class ResearchTask(Example):
         super().__init__(input=input_text, output=output_text)
 
 def create_dataset() -> List[ResearchTask]:
-    """Create dataset from predefined research tasks"""
-    return [ResearchTask(task["input"], task["output"]) for task in RESEARCH_TASKS]
+    """Create dataset from predefined research tasks with validation"""
+    dataset = []
+    for task in RESEARCH_TASKS:
+        if not task.get("input") or not task.get("output"):
+            print(f"Warning: Invalid task format, skipping: {task}")
+            continue
+        if len(task["input"]) < 10 or len(task["output"]) < 10:
+            print(f"Warning: Task too short, skipping: {task['input']}")
+            continue
+        dataset.append(ResearchTask(task["input"], task["output"]))
+    return dataset
 
 class ResearcherOptimizer:
     def __init__(self, max_iterations: int = 10, max_searches: int = 3):
@@ -82,12 +91,21 @@ class ResearcherOptimizer:
         return total_score / len(self.dataset)
     
     def _calculate_similarity(self, text1: str, text2: str) -> float:
-        """Basic text similarity metric (placeholder for more sophisticated evaluation)"""
-        # Count overlapping words as a simple metric
-        words1 = set(text1.lower().split())
-        words2 = set(text2.lower().split())
-        intersection = words1.intersection(words2)
-        return len(intersection) / max(len(words1), len(words2))
+        """Improved text similarity metric using TF-IDF cosine similarity"""
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+        
+        # Handle empty text cases
+        if not text1 or not text2:
+            return 0.0
+            
+        # Create TF-IDF vectors
+        vectorizer = TfidfVectorizer()
+        tfidf_matrix = vectorizer.fit_transform([text1, text2])
+        
+        # Calculate cosine similarity
+        similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+        return float(similarity)
     
     def optimize(self, num_candidates: int = 5, num_iterations: int = 3) -> Researcher:
         """Optimize the researcher using MIPRO"""

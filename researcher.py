@@ -28,6 +28,18 @@ class EvaluateTextSignature(dspy.Signature):
     evaluation = dspy.OutputField(desc="Evaluation of text quality on a scale from 1-10")
     improvement_suggestions = dspy.OutputField(desc="Suggestions for further improving the text")
 
+class GenerateSearchQuerySignature(dspy.Signature):
+    """Generate an effective search query based on research needs"""
+    current_text = dspy.InputField(desc="The current text being researched")
+    research_goal = dspy.InputField(desc="The overall goal of the research")
+    search_results = dspy.InputField(desc="Previous search results", default="")
+    reasoning = dspy.OutputField(desc="Reasoning for the search query")
+    search_query = dspy.OutputField(desc="The search query to use")
+    query_type = dspy.OutputField(
+        desc="Type of query: 'general' for broad searches, 'specific' for focused searches",
+        default="general"
+    )
+
 class Researcher(dspy.Module):
     def __init__(self, max_iterations: int = 10, max_searches: int = 3):
         super().__init__()
@@ -39,11 +51,13 @@ class Researcher(dspy.Module):
         self.max_iterations = max_iterations
         self.max_searches = max_searches
         self.search_count = 0
+        self.research_goal = ""
         
         # Initialize the DSPy modules
         self.decide_action = dspy.ChainOfThought(DecideNextActionSignature)
         self.rewrite_text = dspy.ChainOfThought(RewriteTextSignature)
         self.evaluate_text = dspy.ChainOfThought(EvaluateTextSignature)
+        self.generate_search_query = dspy.ChainOfThought(GenerateSearchQuerySignature)
         
         # State tracking
         self.search_results = []
@@ -114,6 +128,15 @@ class Researcher(dspy.Module):
                 'improvement_suggestions': "Ensure evaluation returns a valid number between 1-10"
             }
 
+    def generate_search_terms(self) -> str:
+        """Generate effective search terms based on current research state"""
+        result = self.generate_search_query(
+            current_text=self.current_text,
+            research_goal=self.research_goal,
+            search_results=self.search_results
+        )
+        return result.search_query
+
     def run_research(self, initial_text: str) -> Dict:
         """Run the research process with iteration control"""
         if not initial_text:
@@ -121,6 +144,7 @@ class Researcher(dspy.Module):
             
         self.current_text = initial_text
         self.all_texts = [initial_text]
+        self.research_goal = initial_text  # Use initial text as research goal
         
         for iteration in range(self.max_iterations):
             print(f"\n--- Research Iteration {iteration + 1} ---")
@@ -135,9 +159,14 @@ class Researcher(dspy.Module):
                     action = 'rewrite'
                 else:
                     self.search_count += 1
-                    # Get the search term from the current text
-                    search_term = self.current_text[:100]  # Use first 100 chars as search term
+                    # Generate optimized search terms
+                    search_term = self.generate_search_terms()
                     print(f"Performing search for: {search_term}...")
+                    
+                    # Perform actual search (implementation would go here)
+                    # search_results = serper_search(search_term)
+                    # self.add_search_results(search_results)
+                    
                     continue
                     
             elif action == 'download':

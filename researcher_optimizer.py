@@ -101,8 +101,7 @@ class ResearcherOptimizer:
             prompt_model=self.lm,
             task_model=self.lm,
             auto='light',
-            track_stats=True,
-            requires_permission_to_run=False  # Disable permission prompt
+            track_stats=True
         )
         
         # Create initial researcher

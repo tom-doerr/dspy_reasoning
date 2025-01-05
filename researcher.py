@@ -120,8 +120,9 @@ class Researcher(dspy.Module):
                     action = 'rewrite'
                 else:
                     self.search_count += 1
-                    # Note: Actual search implementation would go here
-                    print("Performing search...")
+                    # Get the search term from the current text
+                    search_term = self.current_text[:100]  # Use first 100 chars as search term
+                    print(f"Performing search for: {search_term}...")
                     continue
                     
             elif action == 'download':

@@ -57,7 +57,7 @@ class SerperSearch:
             raw_data = response.json()
             print(f"Raw API Response: {raw_data}")
             
-            return self._parse_results(raw_data)
+            return raw_data
             
         except requests.exceptions.RequestException as e:
             print(f"Search failed: {str(e)}")
@@ -65,44 +65,6 @@ class SerperSearch:
                 print(f"Response content: {e.response.text}")
             return []
 
-    def _parse_results(self, results: Dict) -> Dict:
-        """Parse and return the full Serper API response structure"""
-        parsed = {
-            'search_parameters': results.get('searchParameters', {}),
-            'organic': [],
-            'top_stories': [],
-            'related_searches': [],
-            'credits': results.get('credits', 0)
-        }
-        
-        # Parse organic results
-        for result in results.get('organic', []):
-            parsed['organic'].append({
-                'title': result.get('title', 'No title'),
-                'link': result.get('link', 'No link'),
-                'snippet': result.get('snippet', 'No snippet'),
-                'date': result.get('date', ''),
-                'position': result.get('position', 0),
-                'sitelinks': result.get('sitelinks', [])
-            })
-            
-        # Parse top stories
-        for story in results.get('topStories', []):
-            parsed['top_stories'].append({
-                'title': story.get('title', 'No title'),
-                'link': story.get('link', 'No link'),
-                'source': story.get('source', ''),
-                'date': story.get('date', ''),
-                'image_url': story.get('imageUrl', '')
-            })
-            
-        # Parse related searches
-        for search in results.get('relatedSearches', []):
-            parsed['related_searches'].append({
-                'query': search.get('query', '')
-            })
-            
-        return parsed
 
 
 if __name__ == "__main__":

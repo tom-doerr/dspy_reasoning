@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import dspy
 from typing import List, Dict, Optional
-import dspy
+from serper_search import SerperSearch
 
 class DecideNextActionSignature(dspy.Signature):
     """Decide the next action to take based on current information"""
@@ -47,6 +47,9 @@ class Researcher(dspy.Module):
         # Configure DeepSeek as the language model with higher temperature for more creativity
         self.lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1.5, cache=False)
         dspy.settings.configure(lm=self.lm)
+        
+        # Initialize search client
+        self.search_client = SerperSearch()
         
         self.max_iterations = max_iterations
         self.max_searches = max_searches
@@ -176,7 +179,7 @@ class Researcher(dspy.Module):
                     
                     try:
                         # Perform actual search with error handling
-                        search_results = serper_search(search_term)
+                        search_results = self.search_client.search(search_term)
                         if search_results:
                             self.add_search_results(search_results)
                         else:

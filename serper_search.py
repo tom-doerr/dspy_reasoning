@@ -91,15 +91,8 @@ class SerperSearch:
                 timeout=10
             )
             
-            # Print debug info
-            print(f"API Response Status: {response.status_code}")
-            print(f"API Response Headers: {response.headers}")
-            
             response.raise_for_status()
-            
-            # Print raw response for debugging
             raw_data = response.json()
-            print(f"Raw API Response: {raw_data}")
             
             return self._parse_response(raw_data)
             

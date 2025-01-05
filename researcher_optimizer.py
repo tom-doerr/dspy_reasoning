@@ -9,62 +9,42 @@ from dspy import Example
 RESEARCH_TASKS = [
     {
         "input": "Write a comprehensive overview of recent developments in AI research",
-        "output": "A detailed report covering key AI advancements in 2024 including..."
     },
     {
         "input": "Explain the latest breakthroughs in quantum computing",
-        "output": "An explanation of recent quantum computing milestones including..."
     },
     {
         "input": "Compare different approaches to climate change mitigation",
-        "output": "A comparative analysis of climate change strategies including..."
     },
     {
         "input": "Analyze the impact of social media on mental health",
-        "output": "A research paper examining social media's effects on mental health..."
     },
     {
         "input": "Describe the evolution of renewable energy technologies",
-        "output": "A historical overview of renewable energy tech development..."
     },
     {
         "input": "Evaluate the effectiveness of different education systems worldwide",
-        "output": "A comparative evaluation of global education systems..."
     },
     {
         "input": "Explain the causes and effects of inflation in modern economies",
-        "output": "An economic analysis of inflation causes and impacts..."
     },
     {
         "input": "Discuss the future of space exploration",
-        "output": "A forward-looking analysis of space exploration trends..."
     },
     {
         "input": "Analyze the role of AI in healthcare diagnostics",
-        "output": "A detailed examination of AI applications in medical diagnostics..."
     },
     {
         "input": "Compare traditional and modern architectural styles",
-        "output": "A comparative study of architectural styles across eras..."
     }
 ]
 
-class ResearchTask(Example):
-    def __init__(self, input: str, output: str):
-        super().__init__(input=input, output=output)
 
-def create_dataset() -> List[ResearchTask]:
+def create_dataset() -> List[Example]:
     """Create dataset from predefined research tasks with validation"""
     dataset = []
     for task in RESEARCH_TASKS:
-        if not task.get("input") or not task.get("output"):
-            print(f"Warning: Invalid task format, skipping: {task}")
-            continue
-        if len(task["input"]) < 10 or len(task["output"]) < 10:
-            print(f"Warning: Task too short, skipping: {task['input']}")
-            continue
-        # Create example with inputs properly set
-        example = ResearchTask(input=task["input"], output=task["output"])
+        example = Example(input=task["input"]).with_inputs('input')
         dataset.append(example)
     return dataset
 

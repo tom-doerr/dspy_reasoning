@@ -1,43 +1,38 @@
 import dspy
 
 class TaskSplitterSignature(dspy.Signature):
-    """Split a complex problem into logical subtasks"""
-    task = dspy.InputField(desc="The complex problem to split")
-    context = dspy.InputField(desc="Context about the task", default="")
-    subtasks = dspy.OutputField(desc="List of logical subtasks to solve independently")
-    split_reasoning = dspy.OutputField(desc="Explanation of why the task was split this way")
+    """Break down complex problems into manageable parts"""
+    task = dspy.InputField(desc="The main problem to break down")
+    context = dspy.InputField(desc="Any relevant background info", default="")
+    subtasks = dspy.OutputField(desc="Clear steps to solve the problem")
+    split_reasoning = dspy.OutputField(desc="Why these steps make sense")
 
 class SubtaskResultSelectorSignature(dspy.Signature):
-    """Select the best result from multiple attempts at solving a subtask"""
-    subtask = dspy.InputField(desc="The subtask being solved")
-    attempts = dspy.InputField(desc="List of attempts with their reasoning and solutions")
-    selected_solution = dspy.OutputField(desc="The best solution based on mathematical correctness and reasoning quality")
-    selection_reasoning = dspy.OutputField(desc="Explanation of why this solution was selected")
+    """Pick the best solution attempt"""
+    subtask = dspy.InputField(desc="The specific step being solved")
+    attempts = dspy.InputField(desc="Different ways people tried to solve it")
+    selected_solution = dspy.OutputField(desc="The most correct and clear solution")
+    selection_reasoning = dspy.OutputField(desc="Why this solution is the best")
 
 class SolutionSelectorSignature(dspy.Signature):
-    """Select the best solution from multiple attempts"""
-    task = dspy.InputField(desc="The original task being solved")
-    solutions = dspy.InputField(desc="List of potential solutions with their reasoning")
+    """Choose the best overall solution"""
+    task = dspy.InputField(desc="The original problem")
+    solutions = dspy.InputField(desc="Possible ways to solve it")
     selection_criteria = dspy.InputField(
-        desc="Criteria for selecting the best solution: "
-             "1. Mathematical correctness, "
-             "2. Logical consistency, "
-             "3. Clarity of reasoning, "
-             "4. Completeness of solution",
-        default="Select the solution that is mathematically correct, logically consistent, "
-                "has clear reasoning, and provides a complete solution to the task"
+        desc="What makes a good solution: correct, logical, clear, complete",
+        default="Pick the solution that is right, makes sense, is easy to follow, and solves the whole problem"
     )
-    selected_solution = dspy.OutputField(desc="The best solution based on the selection criteria")
-    selection_reasoning = dspy.OutputField(desc="Detailed reasoning for why this solution was selected")
+    selected_solution = dspy.OutputField(desc="The best overall solution")
+    selection_reasoning = dspy.OutputField(desc="Why this is the best choice")
 
 class MathCalculationSignature(dspy.Signature):
-    """Solve math calculation tasks using chain-of-thought reasoning"""
-    task = dspy.InputField(desc="The math calculation task to solve")
-    context = dspy.InputField(desc="Context from previous iterations", default="")
-    reasoning = dspy.OutputField(desc="Step-by-step reasoning to solve the task")
-    solution = dspy.OutputField(desc="The numerical solution to the task. Must be a number.")
-    notes_output = dspy.OutputField(desc="Notes for next iteration", default="")
+    """Solve math problems step by step"""
+    task = dspy.InputField(desc="The math problem to solve")
+    context = dspy.InputField(desc="What we know so far", default="")
+    reasoning = dspy.OutputField(desc="Clear steps to solve it")
+    solution = dspy.OutputField(desc="The final answer (must be a number)")
+    notes_output = dspy.OutputField(desc="Things to remember for next time", default="")
     iteration_control = dspy.OutputField(
-        desc="Must be either 'continue' or 'terminate'. Use 'terminate' only when absolutely certain the solution is correct.",
+        desc="'continue' to keep working, 'terminate' if we're sure it's right",
         default="continue"
     )

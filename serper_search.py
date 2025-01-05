@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 import os
-import json
 import sys
-import dspy
-from typing import List, Dict, Optional
 import requests
+from typing import List, Dict, Optional
 
 def main():
     if len(sys.argv) < 2:
@@ -15,135 +13,58 @@ def main():
     print(f"Searching for: {query}")
     
     searcher = SerperSearch()
-    results = searcher(query)
+    results = searcher.search(query)
     
     print("\nSearch Results:")
-    try:
-        results_data = json.loads(results.search_results)
-        for i, result in enumerate(results_data, 1):
-            print(f"\nResult {i}:")
-            print(f"Title: {result.get('title', 'No title')}")
-            print(f"Link: {result.get('link', 'No link')}")
-            print(f"Snippet: {result.get('snippet', 'No snippet')}")
-    except json.JSONDecodeError:
-        print("Error parsing search results")
-    
-    print("\nSearch Reasoning:")
-    print(results.search_reasoning)
+    for i, result in enumerate(results, 1):
+        print(f"\nResult {i}:")
+        print(f"Title: {result.get('title', 'No title')}")
+        print(f"Link: {result.get('link', 'No link')}")
+        print(f"Snippet: {result.get('snippet', 'No snippet')}")
 
-class SerperSearchSignature(dspy.Signature):
-    """Search for relevant information using Serper API"""
-    query = dspy.InputField(desc="The search query to execute")
-    context = dspy.InputField(desc="Context about why this search is needed", default="")
-    search_results = dspy.OutputField(desc="List of relevant search results with snippets")
-    search_reasoning = dspy.OutputField(desc="Explanation of why these results were selected")
-
-class SerperSearch(dspy.Module):
+class SerperSearch:
     def __init__(self, api_key: Optional[str] = None):
-        super().__init__()
         self.api_key = api_key or os.getenv("SERPER_API_KEY")
         if not self.api_key:
             raise ValueError("Serper API key not found. Set SERPER_API_KEY environment variable.")
         
-        self.search = dspy.ChainOfThought(SerperSearchSignature)
-        
-    def forward(self, query: str, context: str = "") -> dspy.Prediction:
-        # Execute the search using Serper API
-        # Serper API uses POST with JSON body and API key in headers
+    def search(self, query: str, num_results: int = 5) -> List[Dict]:
+        """Perform a search using Serper API"""
+        headers = {
+            'X-API-KEY': self.api_key,
+            'Content-Type': 'application/json'
+        }
+        payload = {
+            'q': query,
+            'num': num_results,
+            'gl': 'us',
+            'hl': 'en'
+        }
         
         try:
-            # Make direct HTTP request to Serper API
-            headers = {
-                'X-API-KEY': self.api_key,
-                'Content-Type': 'application/json'
-            }
-            payload = {
-                'q': query,
-                'num': 5,
-                'gl': 'us',
-                'hl': 'en'
-            }
-            
             response = requests.post(
                 'https://google.serper.dev/search',
                 headers=headers,
                 json=payload
             )
-            
-            if response.status_code != 200:
-                return dspy.Prediction(
-                    search_results="[]",
-                    search_reasoning=f"API Error: {response.status_code} - {response.text}"
-                )
-                
-            results = response.json()
-            
-            # Extract relevant information from results
-            search_data = []
-            if isinstance(results, list):
-                for result in results:
-                    search_data.append({
-                        'title': result.get('title'),
-                        'link': result.get('link'),
-                        'snippet': result.get('snippet')
-                    })
-            elif isinstance(results, dict):
-                if results.get('organicResults'):
-                    for result in results['organicResults']:
-                        search_data.append({
-                            'title': result.get('title'),
-                            'link': result.get('link'),
-                            'snippet': result.get('snippet')
-                        })
-                elif results.get('organic_results'):
-                    for result in results['organic_results']:
-                        search_data.append({
-                            'title': result.get('title'),
-                            'link': result.get('link'),
-                            'snippet': result.get('snippet')
-                        })
-            
-            # Use DSPy to analyze and select most relevant results
-            return self.search(
-                query=query,
-                context=context,
-                search_results=json.dumps(search_data)
-            )
-            
-        except Exception as e:
-            error_msg = f"Search Error: {str(e)}"
-            return dspy.Prediction(
-                search_results="[]",
-                search_reasoning=error_msg
-            )
+            response.raise_for_status()
+            return self._parse_results(response.json())
+        except requests.exceptions.RequestException as e:
+            print(f"Search failed: {str(e)}")
+            return []
 
-def add_search_to_pipeline(pipeline: dspy.Module) -> dspy.Module:
-    """Add search capability to an existing reasoning pipeline"""
-    if not hasattr(pipeline, 'search_module'):
-        pipeline.search_module = SerperSearch()
-    
-    original_forward = pipeline.forward
-    
-    def enhanced_forward(*args, **kwargs):
-        # Check if search is needed
-        context = kwargs.get('context', '')
-        if "search for" in context.lower() or "look up" in context.lower():
-            # Extract search query from context
-            search_query = context.split("search for")[-1].split("look up")[-1].strip()
-            
-            # Execute search
-            search_results = pipeline.search_module(
-                query=search_query,
-                context=context
-            )
-            
-            # Update context with search results
-            kwargs['context'] = f"{context}\n\nSearch Results:\n{search_results.search_results}"
-        
-        return original_forward(*args, **kwargs)
-    
-    pipeline.forward = enhanced_forward
-    return pipeline
+    def _parse_results(self, results: Dict) -> List[Dict]:
+        """Parse Serper API results into a simplified format"""
+        search_data = []
+        if results.get('organicResults'):
+            for result in results['organicResults']:
+                search_data.append({
+                    'title': result.get('title'),
+                    'link': result.get('link'),
+                    'snippet': result.get('snippet')
+                })
+        return search_data
+
 
 if __name__ == "__main__":
     main()

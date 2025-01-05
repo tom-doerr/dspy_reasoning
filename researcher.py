@@ -43,6 +43,7 @@ class GenerateSearchQuerySignature(dspy.Signature):
 class Researcher(dspy.Module):
     def __init__(self, max_iterations: int = 10, max_searches: int = 3):
         super().__init__()
+        self.forward = self.run_research  # Map forward to run_research
         
         # Configure DeepSeek as the language model with higher temperature for more creativity
         self.lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1.5, cache=False)

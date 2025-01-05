@@ -58,17 +58,14 @@ class ResearcherOptimizer:
         self.lm = dspy.LM(model="deepseek/deepseek-chat", temperature=1.0, cache=False)
         dspy.settings.configure(lm=self.lm)
         
-    def evaluate_researcher(self, researcher: Researcher) -> float:
-        """Evaluate researcher performance on the dataset"""
-        total_score = 0
+    def evaluate_researcher(self, researcher: Researcher, example: Example) -> float:
+        """Evaluate researcher performance on a single example"""
+        result = researcher(example.input)
+        final_text = result['final_text']
         
-        for task in self.dataset:
-            result = researcher.run_research(task.input)
-            final_text = result['final_text']
-            
-            # Simple evaluation metric (could be enhanced)
-            score = self._calculate_similarity(final_text, task.output)
-            total_score += score
+        # Simple evaluation metric (could be enhanced)
+        score = self._calculate_similarity(final_text, example.output)
+        return score
             
         return total_score / len(self.dataset)
     

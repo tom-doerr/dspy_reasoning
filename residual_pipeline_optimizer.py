@@ -128,17 +128,18 @@ class PipelineOptimizer:
         # Print optimization results
         print("\nOptimization Results:")
         print(f"Time taken: {elapsed:.1f}s")
-        print(f"Bootstrap iterations completed: {num_iterations}")
+        print(f"Bootstrap iterations completed: {len(self.results_history)}")
         print(f"\nBest Configuration:")
         print(f"Number of layers: {self.best_config['num_layers']}")
         print(f"Temperature: {self.best_config['temperature']}")
         print(f"Accuracy: {self.best_accuracy:.1%}")
         
-        # Print performance progression
-        print("\nPerformance History:")
-        for result in sorted(self.results_history, 
-                           key=lambda x: x['accuracy'], 
-                           reverse=True)[:5]:
+        # Print performance progression if we have results
+        if self.results_history:
+            print("\nPerformance History:")
+            for result in sorted(self.results_history, 
+                               key=lambda x: x['accuracy'], 
+                               reverse=True)[:5]:
             print(f"\nLayers: {result['num_layers']}, "
                   f"Temp: {result['temperature']:.1f}, "
                   f"Accuracy: {result['accuracy']:.1%}")

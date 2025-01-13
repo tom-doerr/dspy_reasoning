@@ -33,14 +33,20 @@ class SearchReplacePipeline(dspy.Module):
         except:
             return current
 
-def evaluate_pipeline(dataset_path: str = "math_dataset.json", num_threads: int = 10, num_layers: int = 3) -> float:
-    print(f"\nEvaluating SearchReplace Pipeline with {num_layers} layers...")
+def evaluate_pipeline(
+    dataset_path: str = "math_dataset.json", 
+    num_threads: int = 10, 
+    num_layers: int = 3,
+    model: str = "deepseek/deepseek-chat",
+    temperature: float = 0.3
+) -> float:
+    print(f"\nEvaluating SearchReplace Pipeline with {num_layers} layers using {model}...")
     start_time = time.time()
     
     with open(dataset_path) as f:
         dataset = json.load(f)
     
-    lm = dspy.LM(model="deepseek/deepseek-chat", temperature=0.3, cache=False)
+    lm = dspy.LM(model=model, temperature=temperature, cache=False)
     dspy.settings.configure(lm=lm)
     pipeline = SearchReplacePipeline(num_layers=num_layers)
     

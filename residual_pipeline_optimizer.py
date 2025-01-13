@@ -23,7 +23,8 @@ class PipelineOptimizer:
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 10,
                 num_iterations: int = 10,
-                bootstrap_size: int = 5) -> Dict:
+                bootstrap_size: int = 5,
+                model: str = "deepseek/deepseek-chat") -> Dict:
         
         print("\nStarting Pipeline Bootstrap Optimization...")
         start_time = time.time()
@@ -31,7 +32,8 @@ class PipelineOptimizer:
         # Fixed configuration
         config = {
             'num_layers': 3,
-            'temperature': 1.0
+            'temperature': 1.0,
+            'model': model
         }
         
         # Load dataset
@@ -58,7 +60,9 @@ class PipelineOptimizer:
                 accuracy = evaluate_pipeline(
                     dataset_path=dataset_path,
                     num_layers=config['num_layers'],
-                    num_threads=num_threads
+                    num_threads=num_threads,
+                    model=config['model'],
+                    temperature=config['temperature']
                 )
                 
                 result = {
@@ -103,12 +107,25 @@ class PipelineOptimizer:
         return self.best_config
 
 def main():
-    optimizer = PipelineOptimizer()
-    best_config = optimizer.optimize(num_iterations=10, bootstrap_size=5)
+    # Test both models
+    models = ["deepseek/deepseek-chat", "miprov2"]
     
-    print("\nRunning final evaluation...")
-    final_accuracy = evaluate_pipeline(num_layers=3)  # Fixed 3 layers
-    print(f"\nFinal accuracy: {final_accuracy:.1%}")
+    for model in models:
+        print(f"\nOptimizing with {model}...")
+        optimizer = PipelineOptimizer()
+        best_config = optimizer.optimize(
+            num_iterations=10, 
+            bootstrap_size=5,
+            model=model
+        )
+        
+        print(f"\nRunning final evaluation with {model}...")
+        final_accuracy = evaluate_pipeline(
+            num_layers=3,
+            model=model,
+            temperature=1.0
+        )
+        print(f"\nFinal accuracy with {model}: {final_accuracy:.1%}")
 
 if __name__ == "__main__":
     main()

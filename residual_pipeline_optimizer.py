@@ -20,7 +20,7 @@ class PipelineOptimizer:
         self.results_history = []
         self.pipeline_type = pipeline_type
         
-    def _create_teleprompter(self, metric, num_threads, optimizer_type: str = "bfo"):
+    def _create_teleprompter(self, metric, num_threads, optimizer_type: str = "bfs"):
         """Create and configure teleprompter"""
         if optimizer_type == "mipro":
             return dspy.teleprompt.MIPROv2(
@@ -104,7 +104,7 @@ class PipelineOptimizer:
     def optimize(self, 
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 100,
-                optimizer_type: str = "bfo") -> Dict:
+                optimizer_type: str = "bfs") -> Dict:
         
         print("\nStarting Pipeline Optimization...")
         start_time = time.time()
@@ -114,7 +114,7 @@ class PipelineOptimizer:
         full_dataset = self._load_dataset(dataset_path)
         trainset = self._create_trainset(full_dataset)
             
-        if optimizer_type in ["bfo", "mipro"]:
+        if optimizer_type in ["bfs", "mipro"]:
             print(f"\nUsing {optimizer_type.upper()} optimizer...")
             self._configure_model(config)
             
@@ -201,9 +201,9 @@ def parse_args():
     parser.add_argument('--pipeline-type', type=str, default=PIPELINE_TYPE_STANDARD,
                        choices=[PIPELINE_TYPE_STANDARD, PIPELINE_TYPE_ITER],
                        help='Type of pipeline to optimize')
-    parser.add_argument('--optimizer', type=str, default="bfo",
-                       choices=["bfo", "mipro"],
-                       help='Optimizer to use (bfo=BootstrapFewShot, mipro=MIPROv2)')
+    parser.add_argument('--optimizer', type=str, default="bfs",
+                       choices=["bfs", "mipro"],
+                       help='Optimizer to use (bfs=BootstrapFewShot, mipro=MIPROv2)')
     parser.add_argument('--dataset', type=str, default="math_dataset.json",
                        help='Path to dataset file')
     parser.add_argument('--threads', type=int, default=10,

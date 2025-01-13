@@ -41,7 +41,7 @@ class PipelineOptimizer:
             full_dataset = json.load(f)
         
         # Configure model
-        lm = dspy.LM(model="deepseek/deepseek-chat", 
+        lm = dspy.LM(model=config['model'],
                      temperature=config['temperature'],
                      cache=False)
         dspy.settings.configure(lm=lm)

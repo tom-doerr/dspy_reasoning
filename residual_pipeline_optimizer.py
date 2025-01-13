@@ -22,10 +22,7 @@ class PipelineOptimizer:
     def optimize(self, 
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 10,
-                num_iterations: int = 10,
-                # num_iterations: int = 3,
-                bootstrap_size: int = 5,
-                model: str = "deepseek/deepseek-chat") -> Dict:
+                use_mipro: bool = False) -> Dict:
         
         print("\nStarting Pipeline Bootstrap Optimization...")
         start_time = time.time()
@@ -34,37 +31,64 @@ class PipelineOptimizer:
         config = {
             'num_layers': 3,
             'temperature': 1.0,
-            'model': model
+            'model': "deepseek/deepseek-chat"
         }
         
         # Load dataset
         with open(dataset_path) as f:
             full_dataset = json.load(f)
-        
-        # Configure model
-        lm = dspy.LM(model=config['model'],
-                     temperature=config['temperature'],
-                     cache=False)
-        dspy.settings.configure(lm=lm)
-        
-        with tqdm(total=num_iterations, desc="Bootstrap Iterations") as pbar:
-            for iteration in range(num_iterations):
-                # Create bootstrap sample
-                bootstrap_data = self.bootstrap_dataset(full_dataset, bootstrap_size)
-                
-                # Train on bootstrap sample
-                pipeline = SearchReplacePipeline(num_layers=config['num_layers'])
-                for sample in bootstrap_data:
-                    pipeline(sample['task'])  # Fine-tune on sample
-                
-                # Evaluate on remaining data
-                accuracy = evaluate_pipeline(
-                    dataset_path=dataset_path,
-                    num_layers=config['num_layers'],
-                    num_threads=num_threads,
-                    model=config['model'],
-                    temperature=config['temperature']
-                )
+            
+        # Create trainset for MIPROv2
+        trainset = []
+        for item in full_dataset[:100]:  # Use first 100 examples for training
+            trainset.append(dspy.Example(
+                task=item['task'],
+                solution=item['solution']
+            ).with_inputs('task'))
+            
+        if use_mipro:
+            print("\nUsing MIPROv2 optimizer...")
+            # Configure model
+            lm = dspy.LM(model=config['model'],
+                        temperature=config['temperature'],
+                        cache=False)
+            dspy.settings.configure(lm=lm)
+            
+            # Define metric function
+            def metric(example, prediction, trace=None):
+                try:
+                    pred = float(prediction.solution)
+                    exp = float(example.solution)
+                    return int(abs(pred - exp) < 0.01)
+                except:
+                    return 0
+                    
+            # Configure MIPROv2
+            teleprompter = dspy.teleprompt.MIPROv2(
+                metric=metric,
+                num_candidates=3,
+                num_threads=num_threads,
+                temperature=config['temperature'],
+                max_bootstrapped_demos=3,
+                max_labeled_demos=4
+            )
+            
+            # Create and optimize pipeline
+            pipeline = SearchReplacePipeline(num_layers=config['num_layers'])
+            optimized_pipeline = teleprompter.compile(
+                student=pipeline,
+                trainset=trainset,
+                num_trials=5
+            )
+            
+            # Evaluate optimized pipeline
+            accuracy = evaluate_pipeline(
+                dataset_path=dataset_path,
+                num_layers=config['num_layers'],
+                num_threads=num_threads,
+                model=config['model'],
+                temperature=config['temperature']
+            )
                 
                 result = {
                     **config,
@@ -108,25 +132,14 @@ class PipelineOptimizer:
         return self.best_config
 
 def main():
-    # Test both models
-    models = ["deepseek/deepseek-chat", "miprov2"]
+    # Test with and without MIPROv2
+    optimizer = PipelineOptimizer()
     
-    for model in models:
-        print(f"\nOptimizing with {model}...")
-        optimizer = PipelineOptimizer()
-        best_config = optimizer.optimize(
-            num_iterations=10, 
-            bootstrap_size=5,
-            model=model
-        )
-        
-        print(f"\nRunning final evaluation with {model}...")
-        final_accuracy = evaluate_pipeline(
-            num_layers=3,
-            model=model,
-            temperature=1.0
-        )
-        print(f"\nFinal accuracy with {model}: {final_accuracy:.1%}")
+    print("\nRunning baseline optimization...")
+    baseline_config = optimizer.optimize(use_mipro=False)
+    
+    print("\nRunning MIPROv2 optimization...")
+    mipro_config = optimizer.optimize(use_mipro=True)
 
 if __name__ == "__main__":
     main()

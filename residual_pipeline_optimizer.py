@@ -68,7 +68,6 @@ class PipelineOptimizer:
                 metric=metric,
                 num_candidates=3,
                 num_threads=num_threads,
-                temperature=config['temperature'],
                 max_bootstrapped_demos=3,
                 max_labeled_demos=4
             )

@@ -28,7 +28,8 @@ class PipelineOptimizer:
             num_threads=num_threads,
             max_bootstrapped_demos=3,
             max_labeled_demos=4,
-            auto='light'
+            auto='light',
+            bootstrap_fewshot=True
         )
 
     def bootstrap_dataset(self, dataset: List[Dict], num_bootstrap: int = 5) -> List[Dict]:
@@ -83,6 +84,16 @@ class PipelineOptimizer:
         )
         dspy.settings.configure(lm=lm)
 
+    def _create_fewshot_examples(self, trainset: List[dspy.Example]) -> List[dspy.Example]:
+        """Create few-shot examples from training set"""
+        fewshot_examples = []
+        for example in trainset[:5]:  # Use first 5 examples for few-shot
+            fewshot_examples.append(dspy.Example(
+                task=example.task,
+                solution=example.solution
+            ).with_inputs('task'))
+        return fewshot_examples
+
     def optimize(self, 
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 100,
@@ -111,13 +122,16 @@ class PipelineOptimizer:
                     
             teleprompter = self._create_teleprompter(metric, num_threads)
             
+            # Create few-shot examples
+            fewshot_examples = self._create_fewshot_examples(trainset)
+            
             pipeline = self._create_pipeline(config)
             optimized_pipeline = teleprompter.compile(
                 student=pipeline,
                 trainset=trainset,
                 requires_permission_to_run=False,
-                num_trials=5
-
+                num_trials=5,
+                fewshot_examples=fewshot_examples
             )
             
             accuracy = self._evaluate_pipeline(config, dataset_path, num_threads)

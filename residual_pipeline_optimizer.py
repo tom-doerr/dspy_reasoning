@@ -35,8 +35,7 @@ class PipelineOptimizer:
             return dspy.teleprompt.BootstrapFewShot(
                 metric=metric,
                 max_bootstrapped_demos=3,
-                max_labeled_demos=4,
-                num_threads=num_threads
+                max_labeled_demos=4
             )
 
     def bootstrap_dataset(self, dataset: List[Dict], num_bootstrap: int = 5) -> List[Dict]:

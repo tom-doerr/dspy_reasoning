@@ -192,15 +192,36 @@ class PipelineOptimizer:
         
         return self.best_config
 
+import argparse
+
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(description='Optimize residual pipeline')
+    parser.add_argument('--pipeline-type', type=str, default=PIPELINE_TYPE_STANDARD,
+                       choices=[PIPELINE_TYPE_STANDARD, PIPELINE_TYPE_ITER],
+                       help='Type of pipeline to optimize')
+    parser.add_argument('--use-mipro', action='store_true',
+                       help='Use MIPROv2 optimizer')
+    parser.add_argument('--dataset', type=str, default="math_dataset.json",
+                       help='Path to dataset file')
+    parser.add_argument('--threads', type=int, default=10,
+                       help='Number of threads to use')
+    return parser.parse_args()
+
 def main():
-    # Test with and without MIPROv2
-    # pipeline_type = PIPELINE_TYPE_STANDARD  # Change to PIPELINE_TYPE_ITER to use iterative pipeline
-    pipeline_type = PIPELINE_TYPE_ITER
-    optimizer = PipelineOptimizer(pipeline_type=pipeline_type)
-    # use_mipro = True
-    use_mipro = False
+    args = parse_args()
     
-    baseline_config = optimizer.optimize(use_mipro=use_mipro)
+    print(f"\nOptimizing {args.pipeline_type} pipeline...")
+    print(f"Using MIPROv2: {args.use_mipro}")
+    print(f"Dataset: {args.dataset}")
+    print(f"Threads: {args.threads}\n")
+    
+    optimizer = PipelineOptimizer(pipeline_type=args.pipeline_type)
+    baseline_config = optimizer.optimize(
+        dataset_path=args.dataset,
+        num_threads=args.threads,
+        use_mipro=args.use_mipro
+    )
     
 
 if __name__ == "__main__":

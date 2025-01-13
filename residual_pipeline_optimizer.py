@@ -29,7 +29,7 @@ class PipelineOptimizer:
         
         # Fixed configuration
         config = {
-            'num_layers': 3,
+            'num_layers': 10,
             'temperature': 1.0,
             'model': "deepseek/deepseek-chat"
         }
@@ -69,7 +69,10 @@ class PipelineOptimizer:
                 num_candidates=3,
                 num_threads=num_threads,
                 max_bootstrapped_demos=3,
-                max_labeled_demos=4
+                max_labeled_demos=4,
+                # auto='light',
+                auto='heavy',
+
             )
             
             # Create and optimize pipeline
@@ -77,7 +80,9 @@ class PipelineOptimizer:
             optimized_pipeline = teleprompter.compile(
                 student=pipeline,
                 trainset=trainset,
+                requires_permission_to_run=False,
                 num_trials=5
+
             )
             
             # Evaluate optimized pipeline

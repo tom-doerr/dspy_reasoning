@@ -85,7 +85,7 @@ class PipelineOptimizer:
         # Print optimization results
         print("\nOptimization Results:")
         print(f"Time taken: {elapsed:.1f}s")
-        print(f"Configurations tested: {len(configs)}")
+        print(f"Bootstrap iterations completed: {num_iterations}")
         print(f"\nBest Configuration:")
         print(f"Number of layers: {self.best_config['num_layers']}")
         print(f"Temperature: {self.best_config['temperature']}")

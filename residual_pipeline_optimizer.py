@@ -160,9 +160,11 @@ class PipelineOptimizer:
 
 def main():
     # Test with and without MIPROv2
-    pipeline_type = PIPELINE_TYPE_STANDARD  # Change to PIPELINE_TYPE_ITER to use iterative pipeline
+    # pipeline_type = PIPELINE_TYPE_STANDARD  # Change to PIPELINE_TYPE_ITER to use iterative pipeline
+    pipeline_type = PIPELINE_TYPE_ITER
     optimizer = PipelineOptimizer(pipeline_type=pipeline_type)
-    use_mipro = True
+    # use_mipro = True
+    use_mipro = False
     
     baseline_config = optimizer.optimize(use_mipro=use_mipro)
     

@@ -10,11 +10,15 @@ from tqdm import tqdm
 from residual_pipeline import SearchReplacePipeline, evaluate_pipeline
 from residual_pipeline import SearchReplaceIterPipeline
 
+PIPELINE_TYPE_STANDARD = "standard"
+PIPELINE_TYPE_ITER = "iter"
+
 class PipelineOptimizer:
-    def __init__(self):
+    def __init__(self, pipeline_type: str = PIPELINE_TYPE_STANDARD):
         self.best_config = None
         self.best_accuracy = 0.0
         self.results_history = []
+        self.pipeline_type = pipeline_type
         
     def bootstrap_dataset(self, dataset: List[Dict], num_bootstrap: int = 5) -> List[Dict]:
         indices = np.random.choice(len(dataset), size=num_bootstrap, replace=True)
@@ -76,8 +80,11 @@ class PipelineOptimizer:
 
             )
             
-            # Create and optimize pipeline
-            pipeline = SearchReplacePipeline(num_layers=config['num_layers'])
+            # Create and optimize pipeline based on type
+            if self.pipeline_type == PIPELINE_TYPE_ITER:
+                pipeline = SearchReplaceIterPipeline(num_iters=config['num_layers'])
+            else:
+                pipeline = SearchReplacePipeline(num_layers=config['num_layers'])
             optimized_pipeline = teleprompter.compile(
                 student=pipeline,
                 trainset=trainset,
@@ -153,7 +160,8 @@ class PipelineOptimizer:
 
 def main():
     # Test with and without MIPROv2
-    optimizer = PipelineOptimizer()
+    pipeline_type = PIPELINE_TYPE_STANDARD  # Change to PIPELINE_TYPE_ITER to use iterative pipeline
+    optimizer = PipelineOptimizer(pipeline_type=pipeline_type)
     use_mipro = True
     
     baseline_config = optimizer.optimize(use_mipro=use_mipro)

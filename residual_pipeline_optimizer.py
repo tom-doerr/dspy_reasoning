@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 from concurrent.futures import ThreadPoolExecutor
 from tqdm import tqdm
 from residual_pipeline import SearchReplacePipeline, evaluate_pipeline
+from residual_pipeline import SearchReplaceIterPipeline
 
 class PipelineOptimizer:
     def __init__(self):
@@ -21,7 +22,7 @@ class PipelineOptimizer:
     
     def optimize(self, 
                 dataset_path: str = "math_dataset.json",
-                num_threads: int = 10,
+                num_threads: int = 100,
                 use_mipro: bool = False) -> Dict:
         
         print("\nStarting Pipeline Optimization...")
@@ -70,8 +71,8 @@ class PipelineOptimizer:
                 num_threads=num_threads,
                 max_bootstrapped_demos=3,
                 max_labeled_demos=4,
-                # auto='light',
-                auto='heavy',
+                auto='light',
+                # auto='heavy',
 
             )
             

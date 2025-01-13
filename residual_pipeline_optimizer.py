@@ -20,14 +20,24 @@ class PipelineOptimizer:
         self.results_history = []
         self.pipeline_type = pipeline_type
         
-    def _create_teleprompter(self, metric, num_threads):
-        """Create and configure BootstrapFewShot teleprompter"""
-        return dspy.teleprompt.BootstrapFewShot(
-            metric=metric,
-            max_bootstrapped_demos=3,
-            max_labeled_demos=4,
-            num_threads=num_threads
-        )
+    def _create_teleprompter(self, metric, num_threads, optimizer_type: str = "bfo"):
+        """Create and configure teleprompter"""
+        if optimizer_type == "mipro":
+            return dspy.teleprompt.MIPROv2(
+                metric=metric,
+                num_candidates=3,
+                num_threads=num_threads,
+                max_bootstrapped_demos=3,
+                max_labeled_demos=4,
+                auto='light'
+            )
+        else:  # Default to BootstrapFewShot
+            return dspy.teleprompt.BootstrapFewShot(
+                metric=metric,
+                max_bootstrapped_demos=3,
+                max_labeled_demos=4,
+                num_threads=num_threads
+            )
 
     def bootstrap_dataset(self, dataset: List[Dict], num_bootstrap: int = 5) -> List[Dict]:
         indices = np.random.choice(len(dataset), size=num_bootstrap, replace=True)
@@ -94,7 +104,7 @@ class PipelineOptimizer:
     def optimize(self, 
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 100,
-                use_mipro: bool = False) -> Dict:
+                optimizer_type: str = "bfo") -> Dict:
         
         print("\nStarting Pipeline Optimization...")
         start_time = time.time()
@@ -104,8 +114,8 @@ class PipelineOptimizer:
         full_dataset = self._load_dataset(dataset_path)
         trainset = self._create_trainset(full_dataset)
             
-        if use_mipro:
-            print("\nUsing MIPROv2 optimizer...")
+        if optimizer_type in ["bfo", "mipro"]:
+            print(f"\nUsing {optimizer_type.upper()} optimizer...")
             self._configure_model(config)
             
             # Define metric function
@@ -117,7 +127,7 @@ class PipelineOptimizer:
                 except:
                     return 0
                     
-            teleprompter = self._create_teleprompter(metric, num_threads)
+            teleprompter = self._create_teleprompter(metric, num_threads, optimizer_type)
             
             pipeline = self._create_pipeline(config)
             optimized_pipeline = teleprompter.compile(
@@ -191,8 +201,9 @@ def parse_args():
     parser.add_argument('--pipeline-type', type=str, default=PIPELINE_TYPE_STANDARD,
                        choices=[PIPELINE_TYPE_STANDARD, PIPELINE_TYPE_ITER],
                        help='Type of pipeline to optimize')
-    parser.add_argument('--use-mipro', action='store_true',
-                       help='Use MIPROv2 optimizer')
+    parser.add_argument('--optimizer', type=str, default="bfo",
+                       choices=["bfo", "mipro"],
+                       help='Optimizer to use (bfo=BootstrapFewShot, mipro=MIPROv2)')
     parser.add_argument('--dataset', type=str, default="math_dataset.json",
                        help='Path to dataset file')
     parser.add_argument('--threads', type=int, default=10,
@@ -203,7 +214,7 @@ def main():
     args = parse_args()
     
     print(f"\nOptimizing {args.pipeline_type} pipeline...")
-    print(f"Using MIPROv2: {args.use_mipro}")
+    print(f"Optimizer: {args.optimizer.upper()}")
     print(f"Dataset: {args.dataset}")
     print(f"Threads: {args.threads}\n")
     
@@ -211,7 +222,7 @@ def main():
     baseline_config = optimizer.optimize(
         dataset_path=args.dataset,
         num_threads=args.threads,
-        use_mipro=args.use_mipro
+        optimizer_type=args.optimizer
     )
     
 

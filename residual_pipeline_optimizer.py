@@ -51,6 +51,38 @@ class PipelineOptimizer:
             temperature=config['temperature']
         )
 
+    def _get_default_config(self) -> Dict:
+        """Get default configuration for optimization"""
+        return {
+            'num_layers': 10,
+            'temperature': 1.0,
+            'model': "deepseek/deepseek-chat"
+        }
+
+    def _load_dataset(self, dataset_path: str) -> List[Dict]:
+        """Load dataset from JSON file"""
+        with open(dataset_path) as f:
+            return json.load(f)
+
+    def _create_trainset(self, dataset: List[Dict]) -> List[dspy.Example]:
+        """Create training set from dataset"""
+        trainset = []
+        for item in dataset[:100]:  # Use first 100 examples for training
+            trainset.append(dspy.Example(
+                task=item['task'],
+                solution=item['solution']
+            ).with_inputs('task'))
+        return trainset
+
+    def _configure_model(self, config: Dict) -> None:
+        """Configure DSPy language model"""
+        lm = dspy.LM(
+            model=config['model'],
+            temperature=config['temperature'],
+            cache=False
+        )
+        dspy.settings.configure(lm=lm)
+
     def optimize(self, 
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 100,
@@ -59,32 +91,14 @@ class PipelineOptimizer:
         print("\nStarting Pipeline Optimization...")
         start_time = time.time()
         
-        # Fixed configuration
-        config = {
-            'num_layers': 10,
-            'temperature': 1.0,
-            'model': "deepseek/deepseek-chat"
-        }
+        config = self._get_default_config()
         
-        # Load dataset
-        with open(dataset_path) as f:
-            full_dataset = json.load(f)
-            
-        # Create trainset for MIPROv2
-        trainset = []
-        for item in full_dataset[:100]:  # Use first 100 examples for training
-            trainset.append(dspy.Example(
-                task=item['task'],
-                solution=item['solution']
-            ).with_inputs('task'))
+        full_dataset = self._load_dataset(dataset_path)
+        trainset = self._create_trainset(full_dataset)
             
         if use_mipro:
             print("\nUsing MIPROv2 optimizer...")
-            # Configure model
-            lm = dspy.LM(model=config['model'],
-                        temperature=config['temperature'],
-                        cache=False)
-            dspy.settings.configure(lm=lm)
+            self._configure_model(config)
             
             # Define metric function
             def metric(example, prediction, trace=None):

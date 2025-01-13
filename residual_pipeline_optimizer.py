@@ -23,6 +23,7 @@ class PipelineOptimizer:
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 10,
                 num_iterations: int = 10,
+                # num_iterations: int = 3,
                 bootstrap_size: int = 5,
                 model: str = "deepseek/deepseek-chat") -> Dict:
         

@@ -21,15 +21,12 @@ class PipelineOptimizer:
         self.pipeline_type = pipeline_type
         
     def _create_teleprompter(self, metric, num_threads):
-        """Create and configure MIPROv2 teleprompter"""
-        return dspy.teleprompt.MIPROv2(
+        """Create and configure BootstrapFewShot teleprompter"""
+        return dspy.teleprompt.BootstrapFewShot(
             metric=metric,
-            num_candidates=3,
-            num_threads=num_threads,
             max_bootstrapped_demos=3,
             max_labeled_demos=4,
-            auto='light',
-            bootstrap_fewshot=True
+            num_threads=num_threads
         )
 
     def bootstrap_dataset(self, dataset: List[Dict], num_bootstrap: int = 5) -> List[Dict]:
@@ -122,16 +119,10 @@ class PipelineOptimizer:
                     
             teleprompter = self._create_teleprompter(metric, num_threads)
             
-            # Create few-shot examples
-            fewshot_examples = self._create_fewshot_examples(trainset)
-            
             pipeline = self._create_pipeline(config)
             optimized_pipeline = teleprompter.compile(
-                student=pipeline,
-                trainset=trainset,
-                requires_permission_to_run=False,
-                num_trials=5,
-                fewshot_examples=fewshot_examples
+                pipeline,
+                trainset=trainset
             )
             
             accuracy = self._evaluate_pipeline(config, dataset_path, num_threads)

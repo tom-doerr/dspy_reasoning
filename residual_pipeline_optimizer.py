@@ -140,9 +140,9 @@ class PipelineOptimizer:
             for result in sorted(self.results_history, 
                                key=lambda x: x['accuracy'], 
                                reverse=True)[:5]:
-            print(f"\nLayers: {result['num_layers']}, "
-                  f"Temp: {result['temperature']:.1f}, "
-                  f"Accuracy: {result['accuracy']:.1%}")
+                print(f"\nLayers: {result['num_layers']}, "
+                      f"Temp: {result['temperature']:.1f}, "
+                      f"Accuracy: {result['accuracy']:.1%}")
         
         return self.best_config
 

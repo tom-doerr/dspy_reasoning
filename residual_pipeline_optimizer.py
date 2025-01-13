@@ -104,7 +104,8 @@ class PipelineOptimizer:
     def optimize(self, 
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 100,
-                optimizer_type: str = "bfs") -> Dict:
+                optimizer_type: str = "bfs",
+                num_iterations: int = 3) -> Dict:
         
         print("\nStarting Pipeline Optimization...")
         start_time = time.time()
@@ -127,15 +128,39 @@ class PipelineOptimizer:
                 except:
                     return 0
                     
-            teleprompter = self._create_teleprompter(metric, num_threads, optimizer_type)
+            teacher = None
+            best_accuracy = 0.0
+            best_pipeline = None
             
-            pipeline = self._create_pipeline(config)
-            optimized_pipeline = teleprompter.compile(
-                pipeline,
-                trainset=trainset
-            )
+            for iteration in range(num_iterations):
+                print(f"\nBFS Iteration {iteration + 1}/{num_iterations}")
+                
+                teleprompter = self._create_teleprompter(metric, num_threads, optimizer_type)
+                
+                # Create new student pipeline
+                student = self._create_pipeline(config)
+                
+                # Compile with current teacher
+                optimized_pipeline = teleprompter.compile(
+                    student,
+                    trainset=trainset,
+                    teacher=teacher
+                )
+                
+                # Evaluate the optimized pipeline
+                accuracy = self._evaluate_pipeline(config, dataset_path, num_threads)
+                
+                # Update best pipeline if this one is better
+                if accuracy > best_accuracy:
+                    best_accuracy = accuracy
+                    best_pipeline = optimized_pipeline
+                
+                # Set current optimized pipeline as teacher for next iteration
+                teacher = optimized_pipeline
+                
+                print(f"Iteration {iteration + 1} accuracy: {accuracy:.1%}")
             
-            accuracy = self._evaluate_pipeline(config, dataset_path, num_threads)
+            accuracy = best_accuracy
             
             result = {
                 **config,
@@ -208,6 +233,8 @@ def parse_args():
                        help='Path to dataset file')
     parser.add_argument('--threads', type=int, default=10,
                        help='Number of threads to use')
+    parser.add_argument('--iterations', type=int, default=3,
+                       help='Number of BFS iterations to run')
     return parser.parse_args()
 
 def main():

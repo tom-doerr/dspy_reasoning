@@ -24,7 +24,7 @@ class PipelineOptimizer:
                 num_threads: int = 10,
                 use_mipro: bool = False) -> Dict:
         
-        print("\nStarting Pipeline Bootstrap Optimization...")
+        print("\nStarting Pipeline Optimization...")
         start_time = time.time()
         
         # Fixed configuration
@@ -89,25 +89,39 @@ class PipelineOptimizer:
                 model=config['model'],
                 temperature=config['temperature']
             )
-                
-                result = {
-                    **config,
-                    'accuracy': accuracy,
-                    'iteration': iteration,
-                    'timestamp': time.time()
-                }
-                self.results_history.append(result)
-                
-                # Update best accuracy
-                if accuracy > self.best_accuracy:
-                    self.best_accuracy = accuracy
-                    self.best_config = config
-                
-                pbar.update(1)
-                pbar.set_postfix({
-                    'best_acc': f'{self.best_accuracy:.1%}',
-                    'iter': iteration
-                })
+            
+            result = {
+                **config,
+                'accuracy': accuracy,
+                'timestamp': time.time()
+            }
+            self.results_history.append(result)
+            
+            # Update best accuracy
+            if accuracy > self.best_accuracy:
+                self.best_accuracy = accuracy
+                self.best_config = config
+        else:
+            # Just evaluate baseline pipeline
+            accuracy = evaluate_pipeline(
+                dataset_path=dataset_path,
+                num_layers=config['num_layers'],
+                num_threads=num_threads,
+                model=config['model'],
+                temperature=config['temperature']
+            )
+            
+            result = {
+                **config,
+                'accuracy': accuracy,
+                'timestamp': time.time()
+            }
+            self.results_history.append(result)
+            
+            # Update best accuracy
+            if accuracy > self.best_accuracy:
+                self.best_accuracy = accuracy
+                self.best_config = config
         
         elapsed = time.time() - start_time
         

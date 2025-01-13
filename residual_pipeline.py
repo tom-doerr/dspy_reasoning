@@ -5,37 +5,41 @@ import json
 from typing import List, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-class ResidualMathPipeline(dspy.Module):
-    def __init__(self, max_iterations: int = 3):
+class SearchReplaceModule(dspy.Module):
+    def __init__(self):
         super().__init__()
-        self.max_iterations = max_iterations
-        self.calculate = dspy.ChainOfThought('task -> solution')
-        self.refine = dspy.ChainOfThought('task, previous_solution -> refined_solution')
+        self.process = dspy.ChainOfThought('input -> (search, replace)')
+        
+    def forward(self, input_text: str) -> str:
+        result = self.process(input=input_text)
+        if not hasattr(result, 'search') or not hasattr(result, 'replace'):
+            return input_text
+        return input_text.replace(result.search, result.replace)
+
+class SearchReplacePipeline(dspy.Module):
+    def __init__(self, num_layers: int = 3):
+        super().__init__()
+        self.layers = [SearchReplaceModule() for _ in range(num_layers)]
 
     def forward(self, task: str) -> str:
-        """Forward pass with residual connections for iterative refinement"""
-        result = self.calculate(task=task)
-        
-        # Iterative refinement with residual connections
-        for _ in range(self.max_iterations - 1):
-            refined = self.refine(task=task, previous_solution=result.solution)
-            result = refined
-            
-        return result.refined_solution or result.solution
+        current = task
+        for layer in self.layers:
+            current = layer(current)
+        try:
+            # Try to evaluate the final expression
+            return str(eval(current))
+        except:
+            return current
 
-def evaluate_pipeline(dataset_path: str = "math_dataset.json", num_threads: int = 10) -> float:
-    """Evaluate the pipeline on a math dataset"""
-    # Load dataset
+def evaluate_pipeline(dataset_path: str = "math_dataset.json", num_threads: int = 10, num_layers: int = 3) -> float:
     with open(dataset_path) as f:
         dataset = json.load(f)
     
-    # Initialize pipeline
     lm = dspy.LM(model="deepseek/deepseek-chat", temperature=0.3, cache=False)
     dspy.settings.configure(lm=lm)
-    pipeline = ResidualMathPipeline()
+    pipeline = SearchReplacePipeline(num_layers=num_layers)
     
     correct = 0
-    total = len(dataset)
     
     def evaluate_task(task_data):
         try:
@@ -46,11 +50,10 @@ def evaluate_pipeline(dataset_path: str = "math_dataset.json", num_threads: int 
         except (ValueError, TypeError):
             return False
     
-    # Evaluate in parallel
     with ThreadPoolExecutor(max_workers=num_threads) as executor:
         futures = [
             executor.submit(evaluate_task, task_data)
-            for task_data in dataset[:100]  # Evaluate on first 100 samples
+            for task_data in dataset[:100]
         ]
         
         for future in as_completed(futures):
@@ -61,4 +64,4 @@ def evaluate_pipeline(dataset_path: str = "math_dataset.json", num_threads: int 
     return accuracy
 
 if __name__ == "__main__":
-    evaluate_pipeline()
+    evaluate_pipeline(num_layers=3)

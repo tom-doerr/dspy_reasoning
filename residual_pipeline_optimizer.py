@@ -249,7 +249,8 @@ def main():
     baseline_config = optimizer.optimize(
         dataset_path=args.dataset,
         num_threads=args.threads,
-        optimizer_type=args.optimizer
+        optimizer_type=args.optimizer,
+        num_iterations=args.iterations
     )
     
 

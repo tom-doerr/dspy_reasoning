@@ -20,10 +20,37 @@ class PipelineOptimizer:
         self.results_history = []
         self.pipeline_type = pipeline_type
         
+    def _create_teleprompter(self, metric, num_threads):
+        """Create and configure MIPROv2 teleprompter"""
+        return dspy.teleprompt.MIPROv2(
+            metric=metric,
+            num_candidates=3,
+            num_threads=num_threads,
+            max_bootstrapped_demos=3,
+            max_labeled_demos=4,
+            auto='light'
+        )
+
     def bootstrap_dataset(self, dataset: List[Dict], num_bootstrap: int = 5) -> List[Dict]:
         indices = np.random.choice(len(dataset), size=num_bootstrap, replace=True)
         return [dataset[i] for i in indices]
     
+    def _create_pipeline(self, config):
+        """Create appropriate pipeline based on configured type"""
+        if self.pipeline_type == PIPELINE_TYPE_ITER:
+            return SearchReplaceIterPipeline(num_iters=config['num_layers'])
+        return SearchReplacePipeline(num_layers=config['num_layers'])
+
+    def _evaluate_pipeline(self, config, dataset_path, num_threads):
+        """Evaluate pipeline with given configuration"""
+        return evaluate_pipeline(
+            dataset_path=dataset_path,
+            num_layers=config['num_layers'],
+            num_threads=num_threads,
+            model=config['model'],
+            temperature=config['temperature']
+        )
+
     def optimize(self, 
                 dataset_path: str = "math_dataset.json",
                 num_threads: int = 100,
@@ -68,23 +95,9 @@ class PipelineOptimizer:
                 except:
                     return 0
                     
-            # Configure MIPROv2
-            teleprompter = dspy.teleprompt.MIPROv2(
-                metric=metric,
-                num_candidates=3,
-                num_threads=num_threads,
-                max_bootstrapped_demos=3,
-                max_labeled_demos=4,
-                auto='light',
-                # auto='heavy',
-
-            )
+            teleprompter = self._create_teleprompter(metric, num_threads)
             
-            # Create and optimize pipeline based on type
-            if self.pipeline_type == PIPELINE_TYPE_ITER:
-                pipeline = SearchReplaceIterPipeline(num_iters=config['num_layers'])
-            else:
-                pipeline = SearchReplacePipeline(num_layers=config['num_layers'])
+            pipeline = self._create_pipeline(config)
             optimized_pipeline = teleprompter.compile(
                 student=pipeline,
                 trainset=trainset,
@@ -93,14 +106,7 @@ class PipelineOptimizer:
 
             )
             
-            # Evaluate optimized pipeline
-            accuracy = evaluate_pipeline(
-                dataset_path=dataset_path,
-                num_layers=config['num_layers'],
-                num_threads=num_threads,
-                model=config['model'],
-                temperature=config['temperature']
-            )
+            accuracy = self._evaluate_pipeline(config, dataset_path, num_threads)
             
             result = {
                 **config,

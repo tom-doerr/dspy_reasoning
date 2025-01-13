@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 class SearchReplaceModule(dspy.Module):
     def __init__(self):
         super().__init__()
-        self.process = dspy.ChainOfThought('input -> (search, replace)')
+        self.process = dspy.ChainOfThought('input -> search, replace')
         
     def forward(self, input_text: str) -> str:
         result = self.process(input=input_text)

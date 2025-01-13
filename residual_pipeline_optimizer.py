@@ -148,12 +148,10 @@ class PipelineOptimizer:
 def main():
     # Test with and without MIPROv2
     optimizer = PipelineOptimizer()
+    use_mipro = True
     
-    print("\nRunning baseline optimization...")
-    baseline_config = optimizer.optimize(use_mipro=False)
+    baseline_config = optimizer.optimize(use_mipro=use_mipro)
     
-    print("\nRunning MIPROv2 optimization...")
-    mipro_config = optimizer.optimize(use_mipro=True)
 
 if __name__ == "__main__":
     main()

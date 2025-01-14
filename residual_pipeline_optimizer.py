@@ -74,7 +74,12 @@ class PipelineOptimizer:
     def _create_trainset(self, dataset: List[Dict]) -> List[dspy.Example]:
         """Create training set from dataset"""
         trainset = []
-        for item in dataset[:100]:  # Use first 100 examples for training
+        # for item in dataset[:100]:  # Use first 100 examples for training
+        # random sample import
+        # for item_i in range(100):
+        from random import sample
+        sample_dataset = sample(dataset, 100)
+        for item in sample_dataset:
             trainset.append(dspy.Example(
                 task=item['task'],
                 solution=item['solution']
@@ -112,7 +117,6 @@ class PipelineOptimizer:
         config = self._get_default_config()
         
         full_dataset = self._load_dataset(dataset_path)
-        trainset = self._create_trainset(full_dataset)
             
         if optimizer_type in ["bfs", "mipro"]:
             print(f"\nUsing {optimizer_type.upper()} optimizer...")
@@ -139,6 +143,7 @@ class PipelineOptimizer:
                 # Create new student pipeline
                 student = self._create_pipeline(config)
                 
+                trainset = self._create_trainset(full_dataset)
                 # Compile with current teacher
                 optimized_pipeline = teleprompter.compile(
                     student,
@@ -152,10 +157,13 @@ class PipelineOptimizer:
                 # Update best pipeline if this one is better
                 if accuracy > best_accuracy:
                     best_accuracy = accuracy
+                    print(f"New best accuracy: {accuracy:.1%}")
                     best_pipeline = optimized_pipeline
                 
-                # Set current optimized pipeline as teacher for next iteration
-                teacher = optimized_pipeline
+                    # Set current optimized pipeline as teacher for next iteration
+                    teacher = optimized_pipeline
+                    print("Teacher updated")
+
                 
                 print(f"Iteration {iteration + 1} accuracy: {accuracy:.1%}")
             

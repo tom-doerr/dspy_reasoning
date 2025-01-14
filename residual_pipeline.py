@@ -10,13 +10,13 @@ from tqdm import tqdm
 class SearchReplaceModule(dspy.Module):
     def __init__(self):
         super().__init__()
-        self.process = dspy.ChainOfThought('input -> search, replace')
+        self.process = dspy.ChainOfThought('input -> search_block, replace_block')
         
     def forward(self, input_text: str) -> str:
         result = self.process(input=input_text)
-        if not hasattr(result, 'search') or not hasattr(result, 'replace'):
+        if not hasattr(result, 'search_block') or not hasattr(result, 'replace_block'):
             return input_text
-        return input_text.replace(result.search, result.replace)
+        return input_text.replace(result.search_block, result.replace_block)
 
 class SearchReplacePipeline(dspy.Module):
     def __init__(self, num_layers: int = 3):
@@ -27,16 +27,49 @@ class SearchReplacePipeline(dspy.Module):
         current = task
         for layer in self.layers:
             current = layer(current)
-        try:
-            # Try to evaluate the final expression
-            return str(eval(current))
-        except:
-            return current
+        return current
+
+
+
+class SearchReplaceIterModule(dspy.Module):
+    def __init__(self):
+        super().__init__()
+        self.process = dspy.ChainOfThought('input, iteration -> search_block, replace_block')
+        
+    def forward(self, input_text: str, iteration: int) -> str:
+        result = self.process(input=input_text, iteration=iteration)
+        if not hasattr(result, 'search_block') or not hasattr(result, 'replace_block'):
+            return input_text
+        return input_text.replace(result.search_block, result.replace_block)
+
+class SearchReplaceIterPipeline(dspy.Module):
+    def __init__(self, num_iters: int = 10):
+        super().__init__()
+        self.layers = [SearchReplaceIterModule() for _ in range(num_iters)]
+
+    def forward(self, task: str) -> str:
+        current = task
+        # for layer in self.layers:
+        for iteration, layer in enumerate(self.layers):
+            # current = layer(current)
+            current = layer(current, iteration)
+        return current
+
+
+
+
+
+
+        # try:
+            # # Try to evaluate the final expression
+            # return str(eval(current))
+        # except:
+            # return current
 
 def evaluate_pipeline(
     dataset_path: str = "math_dataset.json", 
     num_threads: int = 10, 
-    num_layers: int = 3,
+    num_layers: int = 10,
     model: str = "deepseek/deepseek-chat",
     temperature: float = 0.3
 ) -> float:

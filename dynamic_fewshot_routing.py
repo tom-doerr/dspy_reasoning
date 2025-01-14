@@ -35,7 +35,9 @@ def construct_prompt(fewshot_samples):
 
 instruction = ''
 metric_values = []
+score_values = []
 success_list = []
+iteration = 0
 while True:
 # for i in range(10):
     task, solution = generate_task(4)
@@ -53,20 +55,30 @@ while True:
         # metric_values.append(0)
         metric_value = 0
 
+    num_fewshot_samples = len(fewshot_samples)
+    score = metric_value - (num_fewshot_samples/100)
+    score_values.append(score)
+    avg_score = np.mean(score_values[-100:])
+
     metric_values.append(metric_value)
     avg_metric = np.mean(metric_values[-100:])
     for sample in fewshot_samples:
-        if metric_value == 1:
-            success_list[sample['i']]['weight'] *= (0.1/avg_metric) + 0.9
+        penalty_factor = 0.5
+        # if metric_value == 1:
+        if score > avg_score:
+            success_list[sample['i']]['weight'] *= ((1-penalty_factor)/avg_metric) + penalty_factor
         else:
-            success_list[sample['i']]['weight'] *= 0.9
+            success_list[sample['i']]['weight'] *= penalty_factor
+
+        if success_list[sample['i']]['weight'] > 1:
+            success_list[sample['i']]['weight'] = 1
 
 
 
-    num_fewshot_samples = len(fewshot_samples)
 
     print(f"input_: {input_}")
     print(f"reasoning: {reasoning}")
-    print(f"task: {task}, Solution: {solution}, result: {result}, num_fewshot_samples: {num_fewshot_samples}, Avg Metric: {avg_metric}")
+    print(f"iter: {iteration}, task: {task}, Solution: {solution}, result: {result}, num_fs: {num_fewshot_samples}, Avg Metric: {avg_metric}")
+    iteration += 1
 
 

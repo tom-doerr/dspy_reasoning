@@ -46,7 +46,7 @@ def construct_prompt(fewshot_samples):
     for sample in fewshot_samples:
         if 'task' in sample:
             # fewshot_str += f"Task: {sample['task']}\nOutput: {sample['output']}\n"
-            fewshot_str += f"Task: {sample['task']}\nOutput: {sample['output']}\nMetric: {sample['metric']}\n"
+            fewshot_str += f"Task: {sample['task']}\nOutput: {sample['output']}\Output score: {sample['metric']}\n"
         elif 'hypothesis' in sample:
             hypothesis_str += f"Hypothesis: {sample['hypothesis']}\n"
 
@@ -59,8 +59,8 @@ memory = []
 iteration = 0
 while True:
 # for i in range(10):
-    # task, solution = generate_multiplication_task(4)
-    task, solution = generate_program_reasoning_task()
+    task, solution = generate_multiplication_task(4)
+    # task, solution = generate_program_reasoning_task()
     memory_samples = sample_memories(memory)
     # memory_str = construct_prompt(memory_samples)
     fewshot_str, hypothesis_str = construct_prompt(memory_samples)
@@ -72,7 +72,7 @@ while True:
     if result.isdigit() and int(result) == solution:
         # metric_values.append(1)
         # metric_value = 1
-        metric_value = 1/abs(float(result) - solution)
+        metric_value = min(1, 1/abs(float(result) - solution + 0.00001))
     else:
         # metric_values.append(0)
         metric_value = 0

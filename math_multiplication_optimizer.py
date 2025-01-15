@@ -97,7 +97,7 @@ def quick_optimize():
               for a,b in zip(np.random.randint(1e4,1e5,1000), 
                            np.random.randint(1e4,1e5,1000))]
     train, val = dataset[:800], dataset[800:]  # 80/20 split
-    metric = lambda e,p: int(abs(float(p.solution)-float(e.solution))<0.01)
+    metric = lambda e,p,trace=None: int(abs(float(p.solution)-float(e.solution))<0.01)
     llm_program = dspy.ChainOfThought('task -> solution')
     llm_program_compiled = MIPROv2(metric=metric,
                     auto='medium').compile(

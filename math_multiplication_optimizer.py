@@ -2,6 +2,7 @@
 
 import dspy
 import random
+import numpy as np
 from typing import List
 from dspy.teleprompt import MIPROv2
 

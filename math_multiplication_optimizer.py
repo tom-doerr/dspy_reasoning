@@ -22,8 +22,11 @@ def generate_multiplication_dataset(num_samples=1000) -> List[dspy.Example]:
     """Generate multiplication problems with solutions."""
     dataset = []
     for _ in range(num_samples):
-        a = random.randint(1, 10000)
-        b = random.randint(1, 10000)
+        # a = random.randint(1, 10000)
+        # b = random.randint(1, 10000)
+        max_num = int(1e5)
+        a = random.randint(1, max_num)
+        b = random.randint(1, max_num)
         task = f"{a} * {b}"
         solution = a * b
         dataset.append(dspy.Example(task=task, solution=solution).with_inputs('task'))
@@ -55,7 +58,8 @@ def optimize_multiplication_solver():
         num_threads=10,
         max_bootstrapped_demos=3,
         max_labeled_demos=4,
-        auto='light'
+        # auto='light'
+        auto='medium'
     )
 
     # Create and optimize solver
@@ -75,6 +79,14 @@ def optimize_multiplication_solver():
 
     accuracy = correct / len(devset)
     print(f"Validation accuracy: {accuracy:.1%}")
+    # vs unoptimized solver
+    student = MultiplicationSolver()
+    for example in devset:
+        prediction = student(example.task)
+        correct += evaluate_multiplication(example, prediction)
+
+    accuracy = correct / len(devset)
+    print(f"Unoptimized accuracy: {accuracy:.1%}")
 
     return optimized_solver
 

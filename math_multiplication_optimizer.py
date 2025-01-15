@@ -108,12 +108,14 @@ def quick_optimize():
 
 
 
+    # Evaluate unoptimized solver
     student = MultiplicationSolver()
-    for example in devset:
+    correct = 0
+    for example in val:
         prediction = student(example.task)
         correct += metric(example, prediction)
 
-    accuracy = correct / len(devset)
+    accuracy = correct / len(val)
     print(f"Unoptimized accuracy: {accuracy:.1%}")
 
 

@@ -53,7 +53,26 @@ This is an experimental project with several known limitations:
 
 ## System Components
 
-### 1. Jeopardy Dataset Generator
+### 1. Math Multiplication Optimizer
+- Implements multiplication solver using DSPy Chain-of-Thought
+- Uses MIPROv2 for optimization
+- Generates random multiplication problems for training
+- Evaluates accuracy on validation set
+- Example usage:
+  ```bash
+  python3 math_multiplication_optimizer.py
+  ```
+
+### 2. Residual Pipeline Optimizer
+- Optimizes search-replace pipelines using BootstrapFewShot or MIPROv2
+- Supports both standard and iterative pipeline types
+- Tracks optimization history and best configurations
+- Example usage:
+  ```bash
+  python3 residual_pipeline_optimizer.py --pipeline-type standard --optimizer mipro
+  ```
+
+### 3. Jeopardy Dataset Generator
 Generates challenging Jeopardy-style questions across multiple categories:
 - Creates initial questions and hints
 - Produces more challenging final questions

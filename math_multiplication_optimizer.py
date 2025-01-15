@@ -92,8 +92,7 @@ def optimize_multiplication_solver():
 
     return optimized_solver
 
-
-
+from dspy.evaluate import Evaluate
 
 
 class LLMProgram(dspy.Module):
@@ -110,10 +109,11 @@ def quick_optimize():
               for a,b in zip(np.random.randint(1e5,1e6,1000), 
                            np.random.randint(1e5,1e6,1000))]
     train, val = dataset[:800], dataset[800:]  # 80/20 split
-    metric = lambda e,p,trace=None: int(abs(float(p.solution)-float(e.solution))<0.01)
+    # metric = lambda e,p,trace=None: int(abs(float(p.solution)-float(e.solution))<0.01)
+    metric = lambda e,p,trace=None: int(abs(float(p.solution.replace(',',''))-float(e.solution))<0.01)
     
     llm_program = LLMProgram()
-    compiled_llm_program = MIPROv2(metric=metric, auto='heavy').compile(
+    compiled_llm_program = MIPROv2(metric=metric, num_threads=100, auto='heavy').compile(
         llm_program, trainset=train, valset=val)
     
     accuracy = sum(metric(e, compiled_llm_program(e.task)) for e in val) / len(val)
@@ -125,12 +125,16 @@ def quick_optimize():
     student = MultiplicationSolver()
     correct = 0
     for example in tqdm(val):
-        prediction = student(example.task)
-        correct += metric(example, prediction)
+        try:
+            prediction = student(example.task)
+            correct += metric(example, prediction)
+        except ValueError as e: print(e); pass
 
     accuracy = correct / len(val)
     print(f"Unoptimized accuracy: {accuracy:.1%}")
-
+    evaluate = Evaluate(devset=train[:], metric=metric, num_threads=100, display_progress=True, 
+    display_table=True)
+    evaluate(student, devset=train[:])
 
 
 if __name__ == "__main__":

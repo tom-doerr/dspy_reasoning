@@ -19,6 +19,7 @@ class PipelineOptimizer:
         self.best_accuracy = 0.0
         self.results_history = []
         self.pipeline_type = pipeline_type
+        self.dataset_path = "math_dataset.json"
         
     def _create_teleprompter(self, metric, optimizer_type: str = "bfs"):
         """Create and configure teleprompter"""
@@ -117,11 +118,12 @@ class PipelineOptimizer:
         
         config = self._get_default_config()
         
-        full_dataset = self._load_dataset(dataset_path)
+        full_dataset = self._load_dataset(self.dataset_path)
             
-        if optimizer_type in ["bfs", "mipro"]:
-            print(f"\nUsing {optimizer_type.upper()} optimizer...")
-            self._configure_model(config)
+        # Use BFS as default optimizer
+        optimizer_type = "bfs"
+        print(f"\nUsing {optimizer_type.upper()} optimizer...")
+        self._configure_model(config)
             
             # Define metric function
             def metric(example, prediction, trace=None):
@@ -136,10 +138,11 @@ class PipelineOptimizer:
             best_accuracy = 0.0
             best_pipeline = None
             
+            num_iterations = 3
             for iteration in range(num_iterations):
                 print(f"\nBFS Iteration {iteration + 1}/{num_iterations}")
                 
-                teleprompter = self._create_teleprompter(metric, num_threads, optimizer_type)
+                teleprompter = self._create_teleprompter(metric, optimizer_type)
                 
                 # Create new student pipeline
                 student = self._create_pipeline(config)
@@ -153,7 +156,7 @@ class PipelineOptimizer:
                 )
                 
                 # Evaluate the optimized pipeline
-                accuracy = self._evaluate_pipeline(config, dataset_path, num_threads)
+                accuracy = self._evaluate_pipeline(config, self.dataset_path, config['num_threads'])
                 
                 # Update best pipeline if this one is better
                 if accuracy > best_accuracy:

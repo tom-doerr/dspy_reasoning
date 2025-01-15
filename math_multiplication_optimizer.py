@@ -60,7 +60,12 @@ def optimize_multiplication_solver():
 
     # Create and optimize solver
     student = MultiplicationSolver()
-    optimized_solver = teleprompter.compile(student, trainset=trainset, valset=devset)
+    optimized_solver = teleprompter.compile(
+        student, 
+        trainset=trainset, 
+        valset=devset,
+        requires_permission_to_run=False
+    )
 
     # Evaluate on validation set
     correct = 0

@@ -92,20 +92,30 @@ def optimize_multiplication_solver():
     return optimized_solver
 
 def quick_optimize():
-    """Optimize multiplication solver in one function call"""
-    dspy.settings.configure(lm=dspy.LM(model="deepseek/deepseek-chat", temperature=0.3, cache=False))
+    dspy.settings.configure(lm=dspy.LM(model="deepseek/deepseek-chat"))
     dataset = [dspy.Example(task=f"{a}*{b}", solution=a*b).with_inputs('task') 
-              for a,b in zip(np.random.randint(1,1e5,1000), 
-                           np.random.randint(1,1e5,1000))]
+              for a,b in zip(np.random.randint(1e4,1e5,1000), 
+                           np.random.randint(1e4,1e5,1000))]
     train, val = dataset[:800], dataset[800:]  # 80/20 split
-    solver = MIPROv2(metric=lambda e,p: int(abs(float(p.solution)-float(e.solution))<0.01),
-                    num_candidates=3, num_threads=10).compile(
-        MultiplicationSolver(), trainset=train, valset=val, requires_permission_to_run=False)
-    accuracy = sum(int(abs(float(solver(e.task).solution)-float(e.solution))<0.01) for e in val)/len(val)
+    metric = lambda e,p: int(abs(float(p.solution)-float(e.solution))<0.01)
+    solver = MIPROv2(metric=metric,
+                    auto='medium').compile(
+        MultiplicationSolver(), trainset=train, valset=val)
+    accuracy = sum(metric(e, solver(e.task)) for e in val) / len(val)
     print(f"Optimized accuracy: {accuracy:.1%}")
-    return solver
+
+
+
+    student = MultiplicationSolver()
+    for example in devset:
+        prediction = student(example.task)
+        correct += metric(example, prediction)
+
+    accuracy = correct / len(devset)
+    print(f"Unoptimized accuracy: {accuracy:.1%}")
+
+
 
 if __name__ == "__main__":
-    solver = optimize_multiplication_solver()
-    # Also available:
-    # solver = quick_optimize()
+    # solver = optimize_multiplication_solver()
+    quick_optimize()

@@ -187,9 +187,9 @@ class PipelineOptimizer:
         else:
             # Just evaluate baseline pipeline
             accuracy = evaluate_pipeline(
-                dataset_path=dataset_path,
+                dataset_path=self.dataset_path,
                 num_layers=config['num_layers'],
-                num_threads=num_threads,
+                num_threads=config['num_threads'],
                 model=config['model'],
                 temperature=config['temperature']
             )

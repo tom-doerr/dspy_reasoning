@@ -90,5 +90,21 @@ def optimize_multiplication_solver():
 
     return optimized_solver
 
+def quick_optimize(num_samples=1000, train_ratio=0.8, temp=0.3, model="deepseek/deepseek-chat"):
+    """Optimize multiplication solver in one function call"""
+    dspy.settings.configure(lm=dspy.LM(model=model, temperature=temp, cache=False))
+    dataset = [dspy.Example(task=f"{a}*{b}", solution=a*b).with_inputs('task') 
+              for a,b in zip(np.random.randint(1,1e5,num_samples), 
+                           np.random.randint(1,1e5,num_samples))]
+    train, val = dataset[:int(len(dataset)*train_ratio)], dataset[int(len(dataset)*train_ratio):]
+    solver = MIPROv2(metric=lambda e,p: int(abs(float(p.solution)-float(e.solution))<0.01),
+                    num_candidates=3, num_threads=10).compile(
+        MultiplicationSolver(), trainset=train, valset=val, requires_permission_to_run=False)
+    accuracy = sum(int(abs(float(solver(e.task).solution)-float(e.solution))<0.01) for e in val)/len(val)
+    print(f"Optimized accuracy: {accuracy:.1%}")
+    return solver
+
 if __name__ == "__main__":
     solver = optimize_multiplication_solver()
+    # Also available:
+    # solver = quick_optimize()

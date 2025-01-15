@@ -91,6 +91,14 @@ def optimize_multiplication_solver():
 
     return optimized_solver
 
+class SimpleMultiplier(dspy.Module):
+    def __init__(self):
+        super().__init__()
+        self.solver = dspy.ChainOfThought('task -> solution')
+        
+    def forward(self, task):
+        return self.solver(task=task)
+
 def quick_optimize():
     dspy.settings.configure(lm=dspy.LM(model="deepseek/deepseek-chat"))
     dataset = [dspy.Example(task=f"{a}*{b}", solution=a*b).with_inputs('task') 
@@ -98,12 +106,14 @@ def quick_optimize():
                            np.random.randint(1e4,1e5,1000))]
     train, val = dataset[:800], dataset[800:]  # 80/20 split
     metric = lambda e,p,trace=None: int(abs(float(p.solution)-float(e.solution))<0.01)
-    llm_program = dspy.ChainOfThought('task -> solution')
-    llm_program_compiled = MIPROv2(metric=metric,
-                    auto='medium').compile(
-        llm_program, trainset=train, valset=val)
-        # MultiplicationSolver(), trainset=train, valset=val)
-    accuracy = sum(metric(e, llm_program_compiled(e.task)) for e in val) / len(val)
+    
+    # Create and optimize solver
+    student = SimpleMultiplier()
+    optimized_solver = MIPROv2(metric=metric, auto='medium').compile(
+        student, trainset=train, valset=val)
+    
+    # Evaluate optimized solver
+    accuracy = sum(metric(e, optimized_solver(e.task)) for e in val) / len(val)
     print(f"Optimized accuracy: {accuracy:.1%}")
 
 

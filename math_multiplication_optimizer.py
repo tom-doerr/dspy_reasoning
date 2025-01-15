@@ -98,10 +98,12 @@ def quick_optimize():
                            np.random.randint(1e4,1e5,1000))]
     train, val = dataset[:800], dataset[800:]  # 80/20 split
     metric = lambda e,p: int(abs(float(p.solution)-float(e.solution))<0.01)
-    solver = MIPROv2(metric=metric,
+    llm_program = dspy.ChainOfThought('task -> solution')
+    llm_program_compiled = MIPROv2(metric=metric,
                     auto='medium').compile(
-        MultiplicationSolver(), trainset=train, valset=val)
-    accuracy = sum(metric(e, solver(e.task)) for e in val) / len(val)
+        llm_program, trainset=train, valset=val)
+        # MultiplicationSolver(), trainset=train, valset=val)
+    accuracy = sum(metric(e, llm_program_compiled(e.task)) for e in val) / len(val)
     print(f"Optimized accuracy: {accuracy:.1%}")
 
 

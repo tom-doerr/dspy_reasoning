@@ -20,22 +20,23 @@ class PipelineOptimizer:
         self.results_history = []
         self.pipeline_type = pipeline_type
         
-    def _create_teleprompter(self, metric, num_threads, optimizer_type: str = "bfs"):
+    def _create_teleprompter(self, metric, optimizer_type: str = "bfs"):
         """Create and configure teleprompter"""
+        config = self._get_default_config()
         if optimizer_type == "mipro":
             return dspy.teleprompt.MIPROv2(
                 metric=metric,
-                num_candidates=3,
-                num_threads=num_threads,
-                max_bootstrapped_demos=3,
-                max_labeled_demos=4,
+                num_candidates=config['num_candidates'],
+                num_threads=config['num_threads'],
+                max_bootstrapped_demos=config['max_bootstrapped_demos'],
+                max_labeled_demos=config['max_labeled_demos'],
                 auto='light'
             )
         else:  # Default to BootstrapFewShot
             return dspy.teleprompt.BootstrapFewShot(
                 metric=metric,
-                max_bootstrapped_demos=3,
-                max_labeled_demos=4
+                max_bootstrapped_demos=config['max_bootstrapped_demos'],
+                max_labeled_demos=config['max_labeled_demos']
             )
 
     def bootstrap_dataset(self, dataset: List[Dict], num_bootstrap: int = 5) -> List[Dict]:
@@ -63,7 +64,11 @@ class PipelineOptimizer:
         return {
             'num_layers': 10,
             'temperature': 1.0,
-            'model': "deepseek/deepseek-chat"
+            'model': "deepseek/deepseek-chat",
+            'num_threads': 10,
+            'num_candidates': 3,
+            'max_bootstrapped_demos': 3,
+            'max_labeled_demos': 4
         }
 
     def _load_dataset(self, dataset_path: str) -> List[Dict]:
@@ -105,11 +110,7 @@ class PipelineOptimizer:
             ).with_inputs('task'))
         return fewshot_examples
 
-    def optimize(self, 
-                dataset_path: str = "math_dataset.json",
-                num_threads: int = 100,
-                optimizer_type: str = "bfs",
-                num_iterations: int = 3) -> Dict:
+    def optimize(self) -> Dict:
         
         print("\nStarting Pipeline Optimization...")
         start_time = time.time()

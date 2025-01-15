@@ -91,7 +91,11 @@ def optimize_multiplication_solver():
 
     return optimized_solver
 
-class SimpleMultiplier(dspy.Module):
+
+
+
+
+class LLMProgram(dspy.Module):
     def __init__(self):
         super().__init__()
         self.solver = dspy.ChainOfThought('task -> solution')
@@ -107,13 +111,11 @@ def quick_optimize():
     train, val = dataset[:800], dataset[800:]  # 80/20 split
     metric = lambda e,p,trace=None: int(abs(float(p.solution)-float(e.solution))<0.01)
     
-    # Create and optimize solver
-    student = SimpleMultiplier()
-    optimized_solver = MIPROv2(metric=metric, auto='medium').compile(
-        student, trainset=train, valset=val)
+    llm_program = LLMProgram()
+    compiled_llm_program = MIPROv2(metric=metric, auto='medium').compile(
+        llm_program, trainset=train, valset=val)
     
-    # Evaluate optimized solver
-    accuracy = sum(metric(e, optimized_solver(e.task)) for e in val) / len(val)
+    accuracy = sum(metric(e, compiled_llm_program(e.task)) for e in val) / len(val)
     print(f"Optimized accuracy: {accuracy:.1%}")
 
 

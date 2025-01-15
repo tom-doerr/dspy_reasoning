@@ -22,8 +22,8 @@ def generate_multiplication_dataset(num_samples=1000) -> List[dspy.Example]:
     """Generate multiplication problems with solutions."""
     dataset = []
     for _ in range(num_samples):
-        a = random.randint(1, 100)
-        b = random.randint(1, 100)
+        a = random.randint(1, 10000)
+        b = random.randint(1, 10000)
         task = f"{a} * {b}"
         solution = a * b
         dataset.append(dspy.Example(task=task, solution=solution).with_inputs('task'))
